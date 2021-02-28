@@ -3,13 +3,22 @@ import struct
 import socket
 
 class RRQuestion:
-    def __init__(self, queries, qtype=1, qclass=1, id_=-1, qr_=0, opcode_=0,
-                 aa_=0, tc_=0, rd_=1, ra_=0, rcode_=0,
-                 qdcount_=1, ancount_=0, nscount_=0, arcount_=0):
+    def __init__(self, queries, qtype=1, qclass=1, id=-1, qr=0, opcode=0,
+                 aa=0, tc=0, rd=1, ra=0, rcode=0,
+                 qdcount=1, ancount=0, nscount=0, arcount=0):
+        # TODO Check for errors. Some ideas:
+        #   - some value too big or negative
+        #   - z is not 0.
+        #   - etc.
+        if qdcount_ not in [0, 1]:
+            raise Exception("qdcount must be 0 for nonquestions or 1 for a question.\n value was {}".format(qdcount))
 
-        self.hdr = Header(id_, qr=qr_, opcode=opcode_,
-                     aa=aa_, tc=tc_, rd=rd_, ra=ra_, rcode=rcode_,
-                     qdcount=qdcount_, ancount=ancount_, nscount=nscount_, arcount=arcount_)
+
+
+
+        self.hdr = Header(id, qr=qr, opcode=opcode,
+                     aa=aa, tc=tc, rd=rd, ra=ra, rcode=rcode,
+                     qdcount=qdcount, ancount=ancount, nscount=nscount, arcount=arcount)
 
         self.queries = queries
         self.qtype   = qtype
@@ -24,6 +33,14 @@ class RRQuestion:
         q += b'\0'
         return self.hdr.packetize() + q + struct.pack('!HH', self.qtype, self.qclass)
 
+    def __str__(self):
+        # TODO Add verbose option
+        s = str(self.hdr)
+        s += "Queries\n"
+        s += "    " + self.queries + "\n"
+        s += "QTYPE : " + str(self.qtype) + "\n"
+        s += "QCLASS: " + str(self.qclass) + "\n"
+        return s
 
 # UDP IPv4 socket.
 sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -33,7 +50,6 @@ sd.connect(('8.8.8.8', 53))
 
 r = RRQuestion("google.com")
 
-print(r.hdr)
+print(r)
 
-
-# sd.send(r.packetize())
+sd.send(r.packetize())
