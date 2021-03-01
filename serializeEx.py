@@ -15,23 +15,35 @@ from serialize import Serialize
 # 6 | ARCOUNT |
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 
-dns_header = Serialize({"id": (16, 17),
-                        "qr": (),
-                        "opcode": 4,
-                        "aa": (),
-                        "tc": (),
-                        "rd": (1, 1),
-                        "ra": (),
-                        "z": 3,
-                        "rcode": (4),
-                        "qdcount": ("2B", 1),
-                        "ancount": ("16b"),
-                        "nscount": (16),
-                        "arcount": (16)
-                        })
+dns_packet = Serialize({
+            "id": (16, 17),
+            "qr": (),
+            "opcode": 4,
+            "aa": (),
+            "tc": (),
+            "rd": (1, 1),
+            "ra": (),
+            "z": 3,
+            "rcode": 4,
+            "qdcount": ("2B", 1),
+            "ancount": "16b",
+            "nscount": 16,
+            "arcount": 16,
+            "qname": "google.com",
+            "qtype": 16,
+            "qclass": 16
+            })
 
-# for field in dns_header.fields:
-#     print(field)
 
 
-dns_header.packetize()
+
+for field in dns_packet.fields:
+    print(field)
+
+
+print()
+
+id = dns_packet.get_field("id")
+print(id.value)
+
+print(dns_packet.packetize())
