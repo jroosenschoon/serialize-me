@@ -5,7 +5,7 @@ from field import Field
 
 class Serialize:
     # TODO Need variable-length data. eg the domain name for DNS.
-    def __init__(self, data):
+    def __init__(self, data = {}):
         self.data = data
 
         self.fields = []
@@ -36,7 +36,10 @@ class Serialize:
 
     # TODO check if value can fit in specified bits.
     def checkBitSize(self, value, num_bits):
-        pass
+        isFit = False
+        if value <= 2**num_bits:
+            isFit = True
+        return isFit
 
     def extract_fields(self):
         for name, stuff in self.data.items():
@@ -71,6 +74,12 @@ class Serialize:
                 elif isinstance(stuff[0], int):
                     # TODO check if value can fit in specified bits.
                     self.fields.append(Field(name=name, value=stuff[1], size=stuff[0]))
+
+
+# Testing
+test = Serialize()
+# test value 250 with 8 bits
+print(test.checkBitSize(250,8))
 
 
 
