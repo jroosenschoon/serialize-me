@@ -37,7 +37,7 @@ class Serialize:
     # TODO check if value can fit in specified bits.
     def checkBitSize(self, value, num_bits):
         isFit = False
-        if value <= 2**num_bits:
+        if value <= 2**num_bits -1:
             isFit = True
         return isFit
 
