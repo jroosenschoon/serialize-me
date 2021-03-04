@@ -19,12 +19,11 @@ class Deserialize:
     self.header['ncnt'] = head[4] 
     self.header['mcnt'] = head[5]
     # Get Query
-    # print(struct.calcsize('!QHH'))
-    query = self.packet[13:32]
-    print(query)
-    # self.query['qname'] = query[0]
-    # self.query['qtype'] = query[1]
-    # self.query['qclass'] = query[2]
+    (qtype, qclass) = struct.unpack('!HH',self.packet[27:31])
+    query = self.packet[13:26]
+    self.query['qname'] = query
+    self.query['qtype'] = qtype
+    self.query['qclass'] = qclass
 
     # Handle the correct query type (IPv4 / IPv6)
     if self.header['acnt'] > 0:

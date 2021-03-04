@@ -19,5 +19,7 @@ sd.send(req+q)
 rsp = sd.recv(1024)
 pack = Deserialize(rsp)
 
-print(pack.getIPResults())
+print(pack.getAnswers())
+
+print(pack.getQuery())
 
