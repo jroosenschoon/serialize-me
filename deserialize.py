@@ -19,9 +19,11 @@ class Deserialize:
     self.header['ncnt'] = head[4] 
     self.header['mcnt'] = head[5]
     # Get Query
-    (qtype, qclass) = struct.unpack('!HH',self.packet[27:31])
     query = self.packet[13:26]
-    self.query['qname'] = query
+    dirty_host = query.decode("utf-8").split('\x03')
+    clean_host = '.'.join(dirty_host).replace('\x01', '').replace('\x00', '')
+    (qtype, qclass) = struct.unpack('!HH',self.packet[27:31])
+    self.query['qname'] = clean_host
     self.query['qtype'] = qtype
     self.query['qclass'] = qclass
 
