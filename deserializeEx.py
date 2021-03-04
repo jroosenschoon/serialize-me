@@ -23,6 +23,7 @@ q2 += b'\0\0\x1c\0\1'
 sd.send(req+q2)
 
 rsp = sd.recv(1024)
+# pack = Deserialize(rsp, "4b head, 4b id, 4b something")
 pack = Deserialize(rsp)
 
 print(pack.getHeader())
