@@ -6,6 +6,7 @@ class Deserialize:
     self.header = {}
     self.query = {}
     self.answers = []
+    self.ipv = 4
     self.readPacket()
   
   def readPacket(self):
@@ -27,16 +28,22 @@ class Deserialize:
 
     # Handle the correct query type (IPv4 / IPv6)
     if self.header['acnt'] > 0:
+      ans_size = 16 if self.ipv == 4 else 28
       back = len(self.packet)
-      front = back - 16
+      front = back - ans_size
       for x in range(0, self.header['acnt']):
-        (name, atype, aclass,ttl,data_length, address) = struct.unpack('!HHHIHI',self.packet[front:back])
-        s = str(hex(address))[2:]
-        # format address into ip address
-        ip_address = ('.'.join(str(int(i, 16)) for i in ([s[i:i+2] for i in range(0, len(s), 2)])))
+        if self.ipv == 4: 
+          (name, atype, aclass,ttl,data_length, address) = struct.unpack('!HHHIHI',self.packet[front:back])
+          s = str(hex(address))[2:]
+          # format address into ip address
+          ip_address = ('.'.join(str(int(i, 16)) for i in ([s[i:i+2] for i in range(0, len(s), 2)])))
+        else:
+          (name, atype, aclass,ttl,data_length, hi,lo) = struct.unpack('!HHHIHQQ',self.packet[front:back])
+          s = str(hex(hi<<64 | lo))[2:]
+          ip_address = ':'.join(s[i:i+4] for i in (range(0, 16, 4)))
         # loop for multiple results
         back = front
-        front = back - 16
+        front = back - ans_size
         # Set values in answer
         answer = {}
         answer['name'] = name
