@@ -27,6 +27,11 @@ class Deserialize:
     self.query['qtype'] = qtype
     self.query['qclass'] = qclass
 
+    if qtype == 1:
+      self.ipv = 4
+    elif qtype == 28:
+      self.ipv = 6
+
     # Handle the correct query type (IPv4 / IPv6)
     if self.header['acnt'] > 0:
       ans_size = 16 if self.ipv == 4 else 28
@@ -41,7 +46,9 @@ class Deserialize:
         else:
           (name, atype, aclass,ttl,data_length, hi,lo) = struct.unpack('!HHHIHQQ',self.packet[front:back])
           s = str(hex(hi<<64 | lo))[2:]
+          address = s
           ip_address = ':'.join(s[i:i+4] for i in (range(0, 16, 4)))
+
         # loop for multiple results
         back = front
         front = back - ans_size

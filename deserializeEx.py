@@ -15,11 +15,17 @@ for part in parts:
   q2 += bytes([len(part)]) + part.encode()
 q += b'\0\0\1\0\1'
 q2 += b'\0\0\x1c\0\1'
-sd.send(req+q)
+
+# If you want to test:
+# q = IPv4
+# q2 = IPv6
+
+sd.send(req+q2)
+
 rsp = sd.recv(1024)
 pack = Deserialize(rsp)
 
+print(pack.getHeader())
 print(pack.getAnswers())
-
 print(pack.getQuery())
 
