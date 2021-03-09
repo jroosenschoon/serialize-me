@@ -79,24 +79,23 @@ class Serialize:
                 if pattern.match(stuff):
                     if "b" in stuff:
                         size = int(stuff[:stuff.lower().index("b")])
-                        # TODO check if value can fit in specified bits.
                         self.fields.append(Field(name=name, value=0, size=size))
                     elif "B" in stuff:
                         size = int(stuff[:stuff.lower().index("b")]) * 8
-                        # TODO check if value can fit in specified bits.
                         self.fields.append(Field(name=name, value=0, size=size))
                 else:
                     self.fields.append(Field(name=name, value=stuff, size="vary"))
             elif isinstance(stuff, tuple) or isinstance(stuff, list):  # specified value and size.
                 if isinstance(stuff[0], str):
-                    # TODO check if value can fit in specified bits.
                     if "b" in stuff[0]:
                         size = int(stuff[0][:stuff[0].lower().index("b")])
-                        # TODO check if value can fit in specified bits.
+                        if not self.check_bit_size(stuff[1], size):
+                            raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
                         self.fields.append(Field(name=name, value=stuff[1], size=size))
                     elif "B" in stuff[0]:
                         size = int(stuff[0][:stuff[0].lower().index("b")]) * 8
-                        # TODO check if value can fit in specified bits.
+                        if not self.check_bit_size(stuff[1], size):
+                            raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
                         self.fields.append(Field(name=name, value=stuff[1], size=size))
                     elif stuff[0].lower() == NULL_TERMINATE:
                         self.fields.append(Field(name=name, value=stuff[1], size=NULL_TERMINATE))
@@ -105,7 +104,8 @@ class Serialize:
                     elif stuff[0].lower() == PREFIX_LEN_NULL_TERM:
                         self.fields.append(Field(name=name, value=stuff[1], size=PREFIX_LEN_NULL_TERM))
                 elif isinstance(stuff[0], int):
-                    # TODO check if value can fit in specified bits.
+                    if not self.check_bit_size(stuff[1], stuff[0]):
+                        raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(stuff[0]) + " bits.")
                     self.fields.append(Field(name=name, value=stuff[1], size=stuff[0]))
 
 

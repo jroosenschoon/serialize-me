@@ -57,5 +57,5 @@ sd.connect(('8.8.8.8', 53))
 # q += b'\0\0' + bytes.fromhex("1c") + b'\0\1'
 
 
-sd.send(dns_packet.packetize())
+# sd.send(dns_packet.packetize())
 
