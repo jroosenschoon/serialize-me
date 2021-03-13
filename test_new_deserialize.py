@@ -2,6 +2,8 @@ import socket
 import struct
 
 from new_deserialize import Deserialize
+from deserialize import Deserialize1
+
 
 sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sd.connect(('8.8.8.8', 53))
@@ -27,7 +29,10 @@ pack = Deserialize(rsp, {
   'acnt': ('1B'),
   'ncnt': ('1B', 'ANSWER'),
   'mcnt': ('1B'),
-  'ANSWER': {
-    'ip_address': ('16B') 
-  }
+  # 'ANSWER': {
+  #   'ip_address': ('16B') 
+  # }
 })
+
+pack_working = Deserialize1(rsp)
+print(pack_working.getHeader())

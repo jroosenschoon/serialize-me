@@ -1,6 +1,6 @@
 import struct
 
-class Deserialize: 
+class Deserialize1: 
   def __init__(self, packet):
     self.packet = packet
     self.header = {}

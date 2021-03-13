@@ -1,5 +1,7 @@
-import struct
 from functools import reduce
+import struct
+from field import Field
+
 
 def read_bit_string(str):
     size = ''
@@ -22,8 +24,12 @@ def bytes_to_bits(bytes):
 
 class Deserialize: 
   sizes = {
-    'b': 1,
-    'B': 4
+    'b': 1, #bit
+    'B': 2 #byte
+  }
+  struct_sizes = {
+    'b': 'b',
+    'B': 'H'
   }
 
   def __init__(self, packet, data):
@@ -37,26 +43,33 @@ class Deserialize:
 
   def readPacket(self):
     index = 0
-    # self.packet => bit array
-    bits = bytes_to_bits(self.packet)
-    print(bits)
-    print(len(bits))
     for name, stuff in self.data.items():
-      if(type(stuff) == dict):
-        print(stuff)
-      elif(type(stuff) == tuple):
+      if(type(stuff) == tuple):
         (format_str, variable) = stuff
         (size, format) = read_bit_string(format_str)
-         # this should be set equal to the int value of the result of this read
-        self.variables[variable] = 1
+      
+        # handle the variable
+        # self.variables[variable] = 1
       else:
-        # '' => defaults to 1 bit
         if(stuff == ''):
           size = 1
           format = 'b'
         else: 
           (size, format) = read_bit_string(stuff)
-        print(name, size, format)
+
+      length = size * self.sizes[format]
+      new_index = index+length
+
+      struct_str = '!'
+      for i in range(0,size):
+        struct_str += "H"
+
+      val = struct.unpack(struct_str, self.packet[index:new_index])
+
+      f = Field(name, length, val[0])
+      self.fields.append(f)
+      index = new_index
+
 
   
 
