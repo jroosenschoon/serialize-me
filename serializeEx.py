@@ -34,9 +34,6 @@ dns_packet = Serialize({
             })
 
 
-# for field in dns_packet.fields:
-#     print(field)
-
 print(dns_packet)
 
 

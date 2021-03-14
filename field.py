@@ -1,5 +1,6 @@
 import serialize
 
+
 class Field:
     def __init__(self, name, size, value=0):
         self.name = name
@@ -20,3 +21,4 @@ class Field:
         elif self.size == "prefix_length":
             return "Field [name: " + self.name + ", Length prefixed, Value: " + str(self.value) + "]"
         return "Field [name: " + self.name + ", Num bits: " + str(self.size) + ", Value: " + str(self.value) + "]"
+

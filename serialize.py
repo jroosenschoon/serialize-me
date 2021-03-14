@@ -5,18 +5,19 @@ from field import Field
 NULL_TERMINATE = "null_terminate"
 PREFIX_LENGTH  = "prefix_length"
 PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
+
 VAR_PREFIXES = [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM]
 
 class Serialize:
-    def __init__(self, data, verbose=False):
+    def __init__(self, data):
         self.data = data
-        self.verbose = verbose
 
         self.fields = []
 
-        self.extract_fields()
+        self.__extract_fields()
 
-    def bits_to_bytes(self, bit_str):
+    # Helper
+    def __bits_to_bytes(self, bit_str):
         bit_str = bit_str.replace(" ", "")
         return int(bit_str, 2).to_bytes((len(bit_str) + 7) // 8, byteorder='big')
 
@@ -45,7 +46,7 @@ class Serialize:
         temp_word = ""
         for c in bit_str:
             if len(temp_byte) == 8:
-                b_array += self.bits_to_bytes(temp_byte)
+                b_array += self.__bits_to_bytes(temp_byte)
                 temp_byte = ""
             if c == "0" or c == "1":
                 b_array += temp_word.encode()
@@ -53,7 +54,7 @@ class Serialize:
                 temp_byte += c
             else:
                 temp_word += c
-        b_array += self.bits_to_bytes(temp_byte)
+        b_array += self.__bits_to_bytes(temp_byte)
         b_array += temp_word.encode()
         return b_array
 
@@ -63,13 +64,15 @@ class Serialize:
                 return f
         return None
 
-    def check_bit_size(self, value, num_bits):
+    # Helper
+    def __check_bit_size(self, value, num_bits):
         is_fit = False
         if value <= 2 ** num_bits - 1:
             is_fit = True
         return is_fit
 
-    def extract_fields(self):
+    # Helper
+    def __extract_fields(self):
         for name, stuff in self.data.items():
             if stuff == ():  # Empty tuple == 1 bit, value of 0
                 self.fields.append(Field(name=name, value=0, size=1))
@@ -90,12 +93,12 @@ class Serialize:
                 if isinstance(stuff[0], str):
                     if "b" in stuff[0]:
                         size = int(stuff[0][:stuff[0].lower().index("b")])
-                        if not self.check_bit_size(stuff[1], size):
+                        if not self.__check_bit_size(stuff[1], size):
                             raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
                         self.fields.append(Field(name=name, value=stuff[1], size=size))
                     elif "B" in stuff[0]:
                         size = int(stuff[0][:stuff[0].lower().index("b")]) * 8
-                        if not self.check_bit_size(stuff[1], size):
+                        if not self.__check_bit_size(stuff[1], size):
                             raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
                         self.fields.append(Field(name=name, value=stuff[1], size=size))
                     elif stuff[0].lower() == NULL_TERMINATE:
