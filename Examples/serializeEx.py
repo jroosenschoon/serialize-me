@@ -1,5 +1,5 @@
-from serialize import *
-import socket
+from serializeme import serialize
+
 
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 1 | ID |
@@ -15,7 +15,21 @@ import socket
 # 6 | ARCOUNT |
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 
-dns_packet = Serialize({
+# {
+#     "name" : (size, value)
+#     "name" : size    # Value defaults to 0
+#     "name": ()   # size  1bit with 0 as value
+#
+# }
+# Size - a number (defaults to num bits), "2b" for 2 bits or "2B" for 2 bytes
+# -
+# NULL_TERMINATE = "null_terminate"
+# PREFIX_LENGTH  = "prefix_length"
+# PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
+
+# serialize.NULL_TERMINATE or "null_terminate"
+
+dns_packet = serialize.Serialize({
             "id": (16, 17),
             "qr": (),
             "opcode": 4,
@@ -29,24 +43,26 @@ dns_packet = Serialize({
             "ancount": "16b",
             "nscount": 16,
             "arcount": 16,
-            "qname": (PREFIX_LEN_NULL_TERM, ("google", "com")),
+            "qname": (serialize.PREFIX_LEN_NULL_TERM, ("google", "com")),
             "qtype": (16, 1),
             "qclass": (16, 1)
             })
 
 
-# for field in dns_packet.fields:
-#     print(field)
+print(dns_packet)
 
-# print()
+
+print(dns_packet.get_field("id"))
+print(dns_packet.get_field("id").to_binary())
+print(dns_packet.get_field("id").to_hex())
 
 # id = dns_packet.get_field("id")
 # print(id.value)
 
 # print(dns_packet.packetize())
 
-sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sd.connect(('8.8.8.8', 53))
+# sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# sd.connect(('8.8.8.8', 53))
 
 # parts = "facebook.com".split(".")
 # q = b''
@@ -58,4 +74,5 @@ sd.connect(('8.8.8.8', 53))
 
 
 # sd.send(dns_packet.packetize())
+
 
