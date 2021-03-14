@@ -1,4 +1,3 @@
-from serialize import NULL_TERMINATE
 import struct
 
 from functools import reduce
@@ -70,8 +69,10 @@ class Deserialize:
     ip_address = ('.'.join(str(int(i, 16)) for i in ([s[i:i+2] for i in range(0, len(s), 2)])))
     return ip_address
 
-  def __format_ipv6(self, bits):
-    return bits
+  def __format_ipv6(self, bites):
+    s = str(bites.hex())
+    ip_address = ':'.join(s[i:i+4] for i in (range(0, 16, 4)))
+    return ip_address
 
   def __handle_custom_formatting(self, format, bits):
     if format == self.IPv4:

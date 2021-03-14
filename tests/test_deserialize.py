@@ -1,8 +1,7 @@
 import socket
 import struct
 
-from new_deserialize import Deserialize
-from deserialize import Deserialize1
+from deserialize import Deserialize
 
 
 sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -22,7 +21,6 @@ q2 += b'\0\0\x1c\0\1'
 # q2 = IPv6
 sd.send(req+q)
 rsp = sd.recv(1024)
-# pack_working = Deserialize1(rsp)
 
 pack = Deserialize(rsp, {
   # name of field: ('# Bytes', 'formating string', 'variable')
