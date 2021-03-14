@@ -9,7 +9,7 @@ sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sd.connect(('8.8.8.8', 53))
 flags = 1 << 8
 req=struct.pack('!HHHHHH', 17, flags, 1, 0,0,0)
-parts = 'jackgisel.com'.split('.')
+parts = 'justinroosenschoon.com'.split('.')
 q = b''
 q2 = b''
 for part in parts:
@@ -23,14 +23,16 @@ q2 += b'\0\0\x1c\0\1'
 sd.send(req+q2)
 rsp = sd.recv(1024)
 pack = Deserialize(rsp, {
+  # name of field: ('# Bytes', 'formating string', 'variable')
+  # 'jack': () => 1 bit, no formating, no variable
   'pid': ('1B'),
   'pflags': ('1B'),
-  'qcnt': ('1B', 'QUESTIONS'),
-  'acnt': ('1B', 'ANSWERS'),
+  'qcnt': ('1B', '','QUESTIONS'),
+  'acnt': ('1B', '','ANSWERS'),
   'ncnt': ('1B'),
   'mcnt': ('1B'),
-  'QUESTIONS': {
-    'qname': ('17b'),
+  'QUESTIONS': {  
+    'qname': ('13b', Deserialize.HOST),
     'qtype': ('1B'),
     'qclass': ('1B')
   },
@@ -40,15 +42,18 @@ pack = Deserialize(rsp, {
     'class': ('1B'),
     'ttl': ('2B'), 
     'data_length': ('1B'), 
-    'address': ('2B'), 
+    'address': ('2B', Deserialize.IPv4), 
   }
 })
 
 pack_working = Deserialize1(rsp)
 
 
+print(pack.get_field('pid'))
+print(pack.get_field('pflags'))
 print(pack.get_field('qcnt'))
-print(pack_working.getHeader()['qcnt'])
-
 print(pack.get_field('acnt'))
-print(pack_working.getHeader()['acnt'])
+print(pack.get_field('ncnt'))
+print(pack.get_field('mcnt'))
+
+print(pack_working.getHeader())

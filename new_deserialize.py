@@ -1,30 +1,17 @@
-from functools import reduce
 import struct
+
+from functools import reduce
 from field import Field
 
+class Deserialize:
+  # types of formatting
+  HOST = "host"
+  IPv4  = "IPv4"
+  IPv6 = "IPv6"
+  NULL_TERMINATE = "null_terminate" # two \x00\x00
+  PREFIX_LENGTH  = "prefix_length"
+  PREFIX_LEN_NULL_TERM = "prefix_len_null_term" 
 
-def read_bit_string(str):
-    if str == "":
-      return [1, 'b']
-    size = ''
-    format = ''
-    # convert string into useful info
-    for c in list(str):
-      if(c.isnumeric()):
-        size += c
-      else:
-        format = c
-    return [int(size), format]
-
-def bytes_to_bits(bytes):
-  binary_string = ''
-  for b in list(bytes):
-    hex_as_binary = bin(b)
-    padded_binary = hex_as_binary[2:].zfill(8)
-    binary_string += padded_binary
-  return binary_string
-
-class Deserialize: 
   __sizes = {
     'b': 1, # bit
     'B': 2  # byte
@@ -39,7 +26,7 @@ class Deserialize:
     self.data = data
     self.fields = []
     self.variables = {}
-    self.readPacket()
+    self.__readPacket()
 
   def __read_portion(self, index, name, size, format, variable):
     length = size * self.__sizes[format]
@@ -58,33 +45,83 @@ class Deserialize:
 
     return [new_index, f]  
 
-  def readPacket(self):
+  def __read_bit_string(self,bit_string):
+    if bit_string == "":
+      return [1, 'b']
+    size = ''
+    format = ''
+    # convert string into useful info
+    for c in list(bit_string):
+      if(c.isnumeric()):
+        size += c
+      else:
+        format = c
+    return [int(size), format]
+
+  def __format_hostname(self, bits):
+    dirty_host = bits.decode("utf-8").split('\x03')
+    clean_host = '.'.join(dirty_host).replace('\x01', '').replace('\x00', '')
+    return clean_host
+
+  def __format_ipv4(self, bits):
+    address = bits.decode('utf-8')
+    print(address)
+    s = str(hex(address))[2:]
+    ip_address = ('.'.join(str(int(i, 16)) for i in ([s[i:i+2] for i in range(0, len(s), 2)])))
+    return ip_address
+
+  def __format_ipv6(self, bits):
+    return bits
+
+  def __handle_custom_formatting(self, format, bits):
+    if format == self.IPv4:
+      return self.__format_ipv4(bits)
+    elif format == self.IPv6:
+      return self.__format_ipv6(bits)
+    elif format == self.HOST:
+      return self.__format_hostname(bits)
+    else:
+      return None
+
+  def __readPacket(self):
     index = 0
+    print(self.packet)
     for name, stuff in self.data.items():
       if(type(stuff) == dict):
         for i in range(0,self.variables[name]):
           data = []
           for sub_name, sub_stuff in stuff.items():
-            (size, format) = read_bit_string(sub_stuff)
-            (new_index, f) = self.__read_portion(index, sub_name, size, format, "")
+            if(type(sub_stuff) == tuple):
+              (format_str, value_format) = sub_stuff
+              (size, format) = self.__read_bit_string(format_str)
+              length = size * self.__sizes[format]
+              new_index = index+length
+              dirty_bytes = self.packet[index:new_index]
+              print(index, new_index, dirty_bytes)
+              print(self.__handle_custom_formatting(value_format, dirty_bytes))
+            else:
+              (size, format) = self.__read_bit_string(sub_stuff)
+              (new_index, f) = self.__read_portion(index, sub_name, size, format, "")
             data.append(f)
             index = new_index
         self.fields.append({name: data})
       else: 
         if(type(stuff) == tuple):
-          (format_str, variable) = stuff
-          (size, format) = read_bit_string(format_str)
+          (format_str, value_format, variable) = stuff
+          (size, format) = self.__read_bit_string(format_str)
         else:
-          (size, format) = read_bit_string(stuff)
+          (size, format) = self.__read_bit_string(stuff)
           variable = ""
         (new_index, f) = self.__read_portion(index, name, size, format, variable)
+        print(index, new_index, f.value)
         self.fields.append(f)
         index = new_index
 
   def get_field(self, field_name):
-          for f in self.fields:
-              if f.name.lower() == field_name.lower():
-                  return f
-          return None
+    for f in self.fields:
+      if f.name.lower() == field_name.lower():
+        return f
+      # elif if variables
+    return None
   
 
