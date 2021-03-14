@@ -9,7 +9,7 @@ sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sd.connect(('8.8.8.8', 53))
 flags = 1 << 8
 req=struct.pack('!HHHHHH', 17, flags, 1, 0,0,0)
-parts = 'google.com'.split('.')
+parts = 'yahoo.com'.split('.')
 q = b''
 q2 = b''
 for part in parts:
@@ -42,7 +42,7 @@ pack = Deserialize(rsp, {
     'type': ('2B'),
     'class': ('2B'),
     'ttl': ('4B'), 
-    'data_length': ('2B'), 
+    'data_length': ('2B'), # TO DO - variable length for this stuff
     'address': ('4B', Deserialize.IPv4), 
   }
 })
@@ -57,5 +57,9 @@ print('ncnt', pack.get_field('ncnt').value)
 print('qname', pack.get_field('qname').value)
 print('qtype', pack.get_field('qtype').value)
 print('qclass', pack.get_field('qclass').value)
-for item in pack.get_field('ANSWERS').value:
-  print(item.name, item.value)
+print('answers', pack.get_field('ANSWERS').value)
+answers = pack.get_field('ANSWERS').value
+print('num ans => ', len(answers))
+for answer in answers:
+  for item in answer:
+    print(item.name, item.value)

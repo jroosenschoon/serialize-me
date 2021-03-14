@@ -88,6 +88,7 @@ class Deserialize:
     for name, stuff in self.data.items():
       if(type(stuff) == dict):
         old_index = index # save for length
+        all_data = []
         for i in range(0,self.variables[name]):
           data = []
           for sub_name, sub_stuff in stuff.items():
@@ -120,8 +121,9 @@ class Deserialize:
               (new_index, f) = self.__read_portion(index, sub_name, size, format, "")
             data.append(f)
             index = new_index
+          all_data.append(data)
         custom_length = str(index - old_index) + 'B'
-        var_field = Field(name,custom_length, data)
+        var_field = Field(name,custom_length, all_data)
         self.fields.append(var_field)
       else: 
         if(type(stuff) == tuple):
