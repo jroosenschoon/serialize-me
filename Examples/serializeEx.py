@@ -1,4 +1,5 @@
-from serialize import *
+from serializeme import serialize
+
 
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 1 | ID |
@@ -28,7 +29,7 @@ from serialize import *
 
 # serialize.NULL_TERMINATE or "null_terminate"
 
-dns_packet = Serialize({
+dns_packet = serialize.Serialize({
             "id": (16, 17),
             "qr": (),
             "opcode": 4,
@@ -42,7 +43,7 @@ dns_packet = Serialize({
             "ancount": "16b",
             "nscount": 16,
             "arcount": 16,
-            "qname": (PREFIX_LEN_NULL_TERM, ("google", "com")),
+            "qname": (serialize.PREFIX_LEN_NULL_TERM, ("google", "com")),
             "qtype": (16, 1),
             "qclass": (16, 1)
             })

@@ -7,7 +7,7 @@ LONG_DESCRIPTION = 'Python package meant to serialize/deserialize network packet
 
 # Setting up
 setup(
-    name="serialize-me",
+    name="serializeme",
     version=VERSION,
     author="Justin Roosenschoon",
     description=DESCRIPTION,
