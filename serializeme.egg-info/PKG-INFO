@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: serializeme
+Version: 0.0.1
+Summary: Python package meant to serialize/deserialize network packets.
+Home-page: UNKNOWN
+Author: Jack Gisel, Justin Roosenschoon
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: Python package meant to serialize/deserialize network packets sent over the network. By specifyinga format, the package will automatically extract data from a packet or insert data into a packet.
+Keywords: python,network,packet,serialize,networking
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Education
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows

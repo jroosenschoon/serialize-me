@@ -6,7 +6,7 @@ HOST = "host"
 IPv4 = "IPv4"
 IPv6 = "IPv6"
 NULL_TERMINATE = "null_terminate"  # two \x00\x00
-PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
+
 
 class Deserialize:
     # types of formatting
@@ -60,15 +60,10 @@ class Deserialize:
                 format = c
         return [int(size), format]
 
-    def __format_hostname(self, bites):
-        temp_str = []
-        for i in range(1, len(bites)):
-            char = bites[i:i+1].decode()
-            if char.isprintable():
-                temp_str.append(char)
-            else:
-                temp_str.append('.')
-        return ''.join(temp_str)
+    def __format_hostname(self, bits):
+        dirty_host = bits.decode("utf-8").split('\x03')
+        clean_host = '.'.join(dirty_host).replace('\x01', '').replace('\x00', '')
+        return clean_host
 
     def __format_ipv4(self, bites):
         address = bites.hex()
@@ -102,7 +97,7 @@ class Deserialize:
                     for sub_name, sub_stuff in stuff.items():
                         if type(sub_stuff) == tuple:
                             (format_str, value_format) = sub_stuff
-                            if format_str == NULL_TERMINATE or format_str == PREFIX_LEN_NULL_TERM:
+                            if format_str == NULL_TERMINATE:
                                 null_count = 0
                                 front = index + 1
                                 back = index
@@ -139,7 +134,7 @@ class Deserialize:
                     value_format = stuff[1]
                     variable = stuff[2] if len(stuff) > 2 else ''
                     # handle variable length
-                    if format_str == NULL_TERMINATE or format_str == PREFIX_LEN_NULL_TERM:
+                    if (format_str == NULL_TERMINATE):
                         null_count = 0
                         front = index + 1
                         back = index

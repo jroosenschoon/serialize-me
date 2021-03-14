@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+setup.py
+serializeme/__init__.py
+serializeme/deserialize.py
+serializeme/field.py
+serializeme/main.py
+serializeme/serialize.py
+serializeme.egg-info/PKG-INFO
+serializeme.egg-info/SOURCES.txt
+serializeme.egg-info/dependency_links.txt
+serializeme.egg-info/top_level.txt

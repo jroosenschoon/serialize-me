@@ -5,12 +5,11 @@ from serializeme.deserialize import Deserialize
 import serializeme
 
 
-
 sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sd.connect(('8.8.8.8', 53))
 flags = 1 << 8
 req = struct.pack('!HHHHHH', 17, flags, 1, 0, 0, 0)
-parts = 'google.com'.split('.')
+parts = 'jackgisel.com'.split('.')
 q = b''
 q2 = b''
 for part in parts:
@@ -29,7 +28,6 @@ pack = Deserialize(rsp, {
     # 'jack': () => 1 bit, no formating, no variable
     'pid': ('2B'),
     'pflags': ('2B'),
-    'qcnt': ('2B', '', 'QUESTIONS'),
     'qcnt': ('2B'),
     'acnt': ('2B', '', 'ANSWERS'),
     'ncnt': ('2B'),
