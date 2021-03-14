@@ -1,11 +1,13 @@
 import re
-from field import Field
+
+from serializeme.field import Field
 
 NULL_TERMINATE = "null_terminate"
 PREFIX_LENGTH  = "prefix_length"
 PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
 
 VAR_PREFIXES = [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM]
+
 
 class Serialize:
     def __init__(self, data):

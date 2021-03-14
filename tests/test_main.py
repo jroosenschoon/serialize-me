@@ -1,35 +1,39 @@
-import socket
-import struct
-
-from serializeme.deserialize import Deserialize
 import serializeme
+import socket
 
+from serializeme import Serialize, Deserialize
 
+dns_packet = Serialize({
+    "id": (16, 17),
+    "qr": (),
+    "opcode": 4,
+    "aa": (),
+    "tc": (),
+    "rd": (1, 1),
+    "ra": (),
+    "z": 3,
+    "rcode": 4,
+    "qdcount": ("2B", 1),
+    "ancount": "16b",
+    "nscount": 16,
+    "arcount": 16,
+    "qname": (serializeme.PREFIX_LEN_NULL_TERM, ("google", "com")),
+    "qtype": (16, 1),
+    "qclass": (16, 1)
+})
 
 sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sd.connect(('8.8.8.8', 53))
-flags = 1 << 8
-req = struct.pack('!HHHHHH', 17, flags, 1, 0, 0, 0)
-parts = 'google.com'.split('.')
-q = b''
-q2 = b''
-for part in parts:
-    q += bytes([len(part)]) + part.encode()
-    q2 += bytes([len(part)]) + part.encode()
-q += b'\0\0\1\0\1'
-q2 += b'\0\0\x1c\0\1'
-# If you want to test:
-# q = IPv4
-# q2 = IPv6
-sd.send(req + q)
+
+sd.send(dns_packet.packetize())
+
 rsp = sd.recv(1024)
 
 pack = Deserialize(rsp, {
-    # name of field: ('# Bytes', 'formating string', 'variable')
+    # name of field: ('# Bytes', 'formatting string', 'variable')
     # 'jack': () => 1 bit, no formating, no variable
     'pid': ('2B'),
     'pflags': ('2B'),
-    'qcnt': ('2B', '', 'QUESTIONS'),
     'qcnt': ('2B'),
     'acnt': ('2B', '', 'ANSWERS'),
     'ncnt': ('2B'),
@@ -55,7 +59,7 @@ print('ncnt', pack.get_field('ncnt').value)
 print('qname', pack.get_field('qname').value)
 print('qtype', pack.get_field('qtype').value)
 print('qclass', pack.get_field('qclass').value)
-print('answers', pack.get_field('ANSWERS').value)
+# print('answers', pack.get_field('ANSWERS').value)
 answers = pack.get_field('ANSWERS').value
 print('num ans => ', len(answers))
 for answer in answers:
