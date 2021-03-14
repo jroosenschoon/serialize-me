@@ -1,3 +1,5 @@
+import serialize
+
 class Field:
     def __init__(self, name, size, value=0):
         self.name = name
@@ -5,10 +7,12 @@ class Field:
         self.value = value
 
     def to_binary(self):
-        pass
+        if self.size not in serialize.VAR_PREFIXES:
+            return "0" * (self.size - len(bin(self.value)[2:])) + bin(self.value)[2:]
 
     def to_hex(self):
-        pass
+        if self.size not in serialize.VAR_PREFIXES:
+            return "0" * int((self.size - len(bin(self.value)[2:]))/4) + hex(int(bin(self.value)[2:], 2))[2:]
 
     def __str__(self):
         if self.size == "null_terminate":

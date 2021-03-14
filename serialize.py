@@ -5,11 +5,12 @@ from field import Field
 NULL_TERMINATE = "null_terminate"
 PREFIX_LENGTH  = "prefix_length"
 PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
+VAR_PREFIXES = [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM]
 
 class Serialize:
-    # TODO Need variable-length data. eg the domain name for DNS.
-    def __init__(self, data):
+    def __init__(self, data, verbose=False):
         self.data = data
+        self.verbose = verbose
 
         self.fields = []
 
@@ -108,4 +109,12 @@ class Serialize:
                         raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(stuff[0]) + " bits.")
                     self.fields.append(Field(name=name, value=stuff[1], size=stuff[0]))
 
+    def __str__(self):
+        s = ""
+        for field in self.fields:
+            if field.size not in VAR_PREFIXES:
+                s += field.name + ": " + str(field.size) + " bits with value " + str(field.value) + ".\n"
+            else:
+                s += field.name + ": variable size: " + str(field.size) + ", with value " + str(field.value) + ".\n"
 
+        return s

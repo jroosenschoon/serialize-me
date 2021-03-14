@@ -1,6 +1,5 @@
 from serialize import *
 import socket
-
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 1 | ID |
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -38,15 +37,20 @@ dns_packet = Serialize({
 # for field in dns_packet.fields:
 #     print(field)
 
-# print()
+print(dns_packet)
+
+
+print(dns_packet.get_field("id"))
+print(dns_packet.get_field("id").to_binary())
+print(dns_packet.get_field("id").to_hex())
 
 # id = dns_packet.get_field("id")
 # print(id.value)
 
 # print(dns_packet.packetize())
 
-sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sd.connect(('8.8.8.8', 53))
+# sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# sd.connect(('8.8.8.8', 53))
 
 # parts = "facebook.com".split(".")
 # q = b''
