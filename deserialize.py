@@ -38,7 +38,7 @@ class Deserialize1:
       back = len(self.packet)
       front = back - ans_size
       for x in range(0, self.header['acnt']):
-        if self.ipv == 4: 
+        if self.ipv == 4:
           (name, atype, aclass,ttl,data_length, address) = struct.unpack('!HHHIHI',self.packet[front:back])
           s = str(hex(address))[2:]
           # format address into ip address

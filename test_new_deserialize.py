@@ -9,7 +9,7 @@ sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sd.connect(('8.8.8.8', 53))
 flags = 1 << 8
 req=struct.pack('!HHHHHH', 17, flags, 1, 0,0,0)
-parts = 'justinroosenschoon.com'.split('.')
+parts = 'google.com'.split('.')
 q = b''
 q2 = b''
 for part in parts:
@@ -20,40 +20,42 @@ q2 += b'\0\0\x1c\0\1'
 # If you want to test:
 # q = IPv4
 # q2 = IPv6
-sd.send(req+q2)
+sd.send(req+q)
 rsp = sd.recv(1024)
+# pack_working = Deserialize1(rsp)
+
 pack = Deserialize(rsp, {
   # name of field: ('# Bytes', 'formating string', 'variable')
   # 'jack': () => 1 bit, no formating, no variable
-  'pid': ('1B'),
-  'pflags': ('1B'),
-  'qcnt': ('1B', '','QUESTIONS'),
-  'acnt': ('1B', '','ANSWERS'),
-  'ncnt': ('1B'),
-  'mcnt': ('1B'),
-  'QUESTIONS': {  
-    'qname': ('13b', Deserialize.HOST),
-    'qtype': ('1B'),
-    'qclass': ('1B')
-  },
+  'pid': ('2B'),
+  'pflags': ('2B'),
+  'qcnt': ('2B', '','QUESTIONS'),
+  'qcnt': ('2B'),
+  'acnt': ('2B', '','ANSWERS'),
+  'ncnt': ('2B'),
+  'mcnt': ('2B'),
+  'qname': (Deserialize.NULL_TERMINATE, Deserialize.HOST),
+  'qtype': ('2B'),
+  'qclass': ('2B'),
   'ANSWERS': {
-    'name': ('1B'),
-    'type': ('1B'),
-    'class': ('1B'),
-    'ttl': ('2B'), 
-    'data_length': ('1B'), 
-    'address': ('2B', Deserialize.IPv4), 
+    'name': ('2B'),
+    'type': ('2B'),
+    'class': ('2B'),
+    'ttl': ('4B'), 
+    'data_length': ('2B'), 
+    'address': ('4B', Deserialize.IPv4), 
   }
 })
 
-pack_working = Deserialize1(rsp)
 
 
-print(pack.get_field('pid'))
-print(pack.get_field('pflags'))
-print(pack.get_field('qcnt'))
-print(pack.get_field('acnt'))
-print(pack.get_field('ncnt'))
-print(pack.get_field('mcnt'))
-
-print(pack_working.getHeader())
+print('pid', pack.get_field('pid').value)
+print('pflags', pack.get_field('pflags').value)
+print('qcnt', pack.get_field('qcnt').value)
+print('acnt', pack.get_field('acnt').value)
+print('ncnt', pack.get_field('ncnt').value)
+print('qname', pack.get_field('qname').value)
+print('qtype', pack.get_field('qtype').value)
+print('qclass', pack.get_field('qclass').value)
+for item in pack.get_field('ANSWERS').value:
+  print(item.name, item.value)
