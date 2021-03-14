@@ -4,6 +4,8 @@ from field import Field
 
 
 def read_bit_string(str):
+    if str == "":
+      return [1, 'b']
     size = ''
     format = ''
     # convert string into useful info
@@ -23,11 +25,11 @@ def bytes_to_bits(bytes):
   return binary_string
 
 class Deserialize: 
-  sizes = {
-    'b': 1, #bit
-    'B': 2 #byte
+  __sizes = {
+    'b': 1, # bit
+    'B': 2  # byte
   }
-  struct_sizes = {
+  __struct_sizes = {
     'b': 'b',
     'B': 'H'
   }
@@ -39,37 +41,50 @@ class Deserialize:
     self.variables = {}
     self.readPacket()
 
-    
+  def __read_portion(self, index, name, size, format, variable):
+    length = size * self.__sizes[format]
+    new_index = index+length
+
+    struct_str = '!'
+    for i in range(0,size):
+      struct_str += self.__struct_sizes[format]
+
+    val = struct.unpack(struct_str, self.packet[index:new_index])
+
+    if 'variable' in locals() and len(variable) > 0:
+      self.variables[variable] = val[0]
+
+    f = Field(name, length, val[0])
+
+    return [new_index, f]  
 
   def readPacket(self):
     index = 0
     for name, stuff in self.data.items():
-      if(type(stuff) == tuple):
-        (format_str, variable) = stuff
-        (size, format) = read_bit_string(format_str)
-      
-        # handle the variable
-        # self.variables[variable] = 1
-      else:
-        if(stuff == ''):
-          size = 1
-          format = 'b'
-        else: 
+      if(type(stuff) == dict):
+        for i in range(0,self.variables[name]):
+          data = []
+          for sub_name, sub_stuff in stuff.items():
+            (size, format) = read_bit_string(sub_stuff)
+            (new_index, f) = self.__read_portion(index, sub_name, size, format, "")
+            data.append(f)
+            index = new_index
+        self.fields.append({name: data})
+      else: 
+        if(type(stuff) == tuple):
+          (format_str, variable) = stuff
+          (size, format) = read_bit_string(format_str)
+        else:
           (size, format) = read_bit_string(stuff)
+          variable = ""
+        (new_index, f) = self.__read_portion(index, name, size, format, variable)
+        self.fields.append(f)
+        index = new_index
 
-      length = size * self.sizes[format]
-      new_index = index+length
-
-      struct_str = '!'
-      for i in range(0,size):
-        struct_str += "H"
-
-      val = struct.unpack(struct_str, self.packet[index:new_index])
-
-      f = Field(name, length, val[0])
-      self.fields.append(f)
-      index = new_index
-
-
+  def get_field(self, field_name):
+          for f in self.fields:
+              if f.name.lower() == field_name.lower():
+                  return f
+          return None
   
 

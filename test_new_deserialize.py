@@ -25,14 +25,30 @@ rsp = sd.recv(1024)
 pack = Deserialize(rsp, {
   'pid': ('1B'),
   'pflags': ('1B'),
-  'qcnt': ('1B'),
-  'acnt': ('1B'),
-  'ncnt': ('1B', 'ANSWER'),
+  'qcnt': ('1B', 'QUESTIONS'),
+  'acnt': ('1B', 'ANSWERS'),
+  'ncnt': ('1B'),
   'mcnt': ('1B'),
-  # 'ANSWER': {
-  #   'ip_address': ('16B') 
-  # }
+  'QUESTIONS': {
+    'qname': ('17b'),
+    'qtype': ('1B'),
+    'qclass': ('1B')
+  },
+  'ANSWERS': {
+    'name': ('1B'),
+    'type': ('1B'),
+    'class': ('1B'),
+    'ttl': ('2B'), 
+    'data_length': ('1B'), 
+    'address': ('2B'), 
+  }
 })
 
 pack_working = Deserialize1(rsp)
-print(pack_working.getHeader())
+
+
+print(pack.get_field('qcnt'))
+print(pack_working.getHeader()['qcnt'])
+
+print(pack.get_field('acnt'))
+print(pack_working.getHeader()['acnt'])
