@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: serializeme
-Version: 0.0.1
+Version: 0.0.2
 Summary: Python package meant to serialize/deserialize network packets.
 Home-page: UNKNOWN
 Author: Jack Gisel, Justin Roosenschoon
