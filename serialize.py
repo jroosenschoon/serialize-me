@@ -1,5 +1,4 @@
 import re
-
 from field import Field
 
 NULL_TERMINATE = "null_terminate"
@@ -31,8 +30,8 @@ class Serialize:
                     bit_str += "0" * (field.size - len(bin(field.value)[2:])) + bin(field.value)[2:]
                 if field.size == PREFIX_LENGTH or field.size == PREFIX_LEN_NULL_TERM:
                     for f in field.value:
-                        length_octet = "0" * (8-len(bin(len(f))[2:])) + bin(len(f))[2:]
-                        bit_str += length_octet
+                        length_byte = "0" * (8-len(bin(len(f))[2:])) + bin(len(f))[2:]
+                        bit_str += length_byte
                         bit_str += f
                 elif field.size == NULL_TERMINATE:
                     bit_str += bin(field.value)[2:] + "0" * 8
@@ -108,7 +107,7 @@ class Serialize:
                     elif stuff[0].lower() == PREFIX_LEN_NULL_TERM:
                         self.fields.append(Field(name=name, value=stuff[1], size=PREFIX_LEN_NULL_TERM))
                 elif isinstance(stuff[0], int):
-                    if not self.check_bit_size(stuff[1], stuff[0]):
+                    if not self.__check_bit_size(stuff[1], stuff[0]):
                         raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(stuff[0]) + " bits.")
                     self.fields.append(Field(name=name, value=stuff[1], size=stuff[0]))
 

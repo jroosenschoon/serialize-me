@@ -1,5 +1,5 @@
 from serialize import *
-import socket
+
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 1 | ID |
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -13,6 +13,20 @@ import socket
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 6 | ARCOUNT |
 #  +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+# {
+#     "name" : (size, value)
+#     "name" : size    # Value defaults to 0
+#     "name": ()   # size  1bit with 0 as value
+#
+# }
+# Size - a number (defaults to num bits), "2b" for 2 bits or "2B" for 2 bytes
+# -
+# NULL_TERMINATE = "null_terminate"
+# PREFIX_LENGTH  = "prefix_length"
+# PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
+
+# serialize.NULL_TERMINATE or "null_terminate"
 
 dns_packet = Serialize({
             "id": (16, 17),
@@ -59,4 +73,5 @@ print(dns_packet.get_field("id").to_hex())
 
 
 # sd.send(dns_packet.packetize())
+
 
