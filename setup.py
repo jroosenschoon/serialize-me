@@ -9,7 +9,7 @@ LONG_DESCRIPTION = 'Python package meant to serialize/deserialize network packet
 setup(
     name="serializeme",
     version=VERSION,
-    author="Jack Gisel, Justin Roosenschoon",
+    author="Jack Gisel, Justin Roosenschoon, Thai Truong",
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
