@@ -1,5 +1,6 @@
 
 __pycache__/
 .idea/
+/dist
 serializeme.egg-info/
 .DS_Store
