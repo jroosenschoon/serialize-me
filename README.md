@@ -143,10 +143,12 @@ A size can be a number that defaults to the number of bits or it could be a stri
 This python program passes a packet and a dictionary data to the new_deserialize.py file.
 
 ### How it works?
+
 We create a variable named pack and assign it to value returned by the Deserialize function with a packet, a formatting dictionary as its two parameters. 
 
 Let us look at a detailed description of the second parameter:
 The dictionary formatting is represented in the form of a name field containing three values i.e., number of bytes, formatting string and variable. For clarification, an example of name field with the 3 values would be `'qcnt': ('1B','','Questions')`. The formatting string is implemented to give users different static options like a HOST domain or an IPv4. A variable is used as the third value of the name field so that the user will have the option to pass multiple questions to a DNS and/or get multiple answers for a value without any issues. 
+
 
 ## new_deserialize.py
 
