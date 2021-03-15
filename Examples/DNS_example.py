@@ -1,5 +1,7 @@
 import serializeme
-from serializeme import Serialize
+import socket
+
+from serializeme import Serialize, Deserialize
 import socket
 
 # We want to make a DNS packet. RFC1035 gives:
@@ -64,4 +66,41 @@ sd.connect(('8.8.8.8', 53))
 # Send bytes of dns_packet.
 sd.send(dns_packet.packetize())
 
+# Receive packet.
+rsp = sd.recv(1024)
 
+# Create format structure so we can grab all the fields of the response from the DNS server.
+pack = Deserialize(rsp, {
+    'pid': ('2B'),
+    'pflags': ('2B'),
+    'qcnt': ('2B'),
+    'acnt': ('2B', '', 'ANSWERS'),
+    'ncnt': ('2B'),
+    'mcnt': ('2B'),
+    'qname': (serializeme.NULL_TERMINATE, serializeme.HOST),
+    'qtype': ('2B'),
+    'qclass': ('2B'),
+    'ANSWERS': {
+        'name': ('2B'),
+        'type': ('2B'),
+        'class': ('2B'),
+        'ttl': ('4B'),
+        'data_length': ('2B'),
+        'address': ('4B', serializeme.IPv4),
+    }
+})
+
+# Print out all of the fields.
+print('pid', pack.get_field('pid').value)
+print('pflags', pack.get_field('pflags').value)
+print('qcnt', pack.get_field('qcnt').value)
+print('acnt', pack.get_field('acnt').value)
+print('ncnt', pack.get_field('ncnt').value)
+print('qname', pack.get_field('qname').value)
+print('qtype', pack.get_field('qtype').value)
+print('qclass', pack.get_field('qclass').value)
+answers = pack.get_field('ANSWERS').value
+print('num ans => ', len(answers))
+for answer in answers:
+    for item in answer:
+        print(item.name, item.value)
