@@ -82,8 +82,11 @@ For [serialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/seri
 | `("2B", 255)`  | Field with 1 bytes of value 255 | `("2B", 255)` creates `0000000011111111` |
 |  `(KEYWORD, data)` | Create a variable-length field terminating by a specified way. Currently, there are three ways (see below) |  `(serialize.PREFIX_LEN_NULL_TERM, ("google", "com"))` creates `0x06google0x03com0x00`
 
+Currently `serializme` supports three ways to handle variable-length fields:
+* `serialize.PREFIX_LEN_NULL_TERM` : Creates a field that will automatically append the length of each element, then the actual element, and then after the at the end, a byte of zeros
+* `serialize.NULL_TERMINATE` : Creates a field that will automatically add a byte of zeros at the end
+* `serialize.PREFIX_LENGTH` : Creates a field that will automatically append the length of each element, then the actual element.
 
-creates a field that will automatically append the length of each element, then the actual element, and then after the at the end, a byte of zeros
 
 For [deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/deserialize.py"), the following formats are currently supported:
 
