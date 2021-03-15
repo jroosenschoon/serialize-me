@@ -1,17 +1,18 @@
 # Serialize
 ___
-##Table of Content
+## Table of Content
 * [Introduction](#Introduction)
 * [Setup](#setup)
 * [Basic Example](#Basic-Example)
-* [Packet Formatting](#Packet-formattig)
+* [Packet Formatting](#Packet-formatting)
+* [Documentation](#Documentation)
 * [Package Structure](#package-structure)
 
-##Introduction
+## Introduction
 ___
 
 
-###Overview
+### Overview
 ___
 
 | Component      | Description     | 
@@ -21,14 +22,14 @@ ___
 | [serialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/serialize.py") | Generate packets that can be sent over the network |
 | [deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/deserialize.py") | Extract information from packets received over the network |
 
-##Setup
+## Setup
 ___
 Currently, `serializeme` supports releases of Python 3. Python 2 is not supported (and not recommended).
 To install the current release of `serializeme`, simply use `pip`:
 
 ``` pip install serializeme```
 
-##Basic Example
+## Basic Example
 Using  `serializeme` to send data.
 ```python
 import serializeme
@@ -57,7 +58,7 @@ rsp = sd.recv(1024)
 pack = serializeme.Deserialize(rsp, {<PACKET FORMAT>})
 ```
 
-##Packet Formatting
+## Packet Formatting
 ___
 `serializme` aims to be as flexible as possible allowing the user to enter the desired format as they see fit. As such, there is a wide variety of ways to specify formats.
 To create a packet format, create a python Dictionary of the following form:
@@ -72,7 +73,8 @@ For [serialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/seri
 
 | Format         | Description     |  Example |
 | :------------- | :----------: | :----:      |
-| `()`           | Field with 1 bit of value 0 | 
+| `()`           | Field with 1 bit of value 0 | `()` creates `0` |
+| `4`            | Field with 4-bits of value 0 | `4` creates `0000` |
 
 For [deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/deserializeme/serialize.py"), the following formats are currently supported:
 
@@ -80,21 +82,18 @@ For [deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/de
 | :------------- | :----------: | :----:      |
 | `()`           | Field with 1 bit of value 0 | 
 
-
-
-
-##Package Structure
+## Documentation
 ___
 
 
-
-
-# Utilities:
-## Field.py
-### What it does?
+## Package Structure
+___
+## Utilities:
+### Field.py
+#### What it does?
 It is a python program that represents and initializes a field in one of the packets.
 
-### How it works?
+#### How it works?
 
 The Field.py initializes the name, the size and the value of each field.
   
@@ -105,11 +104,11 @@ to_binary() is used to convert the value of a given field into binary
 to_hex() is used to convert the value of a given field into hex
   
   
-## Serialize.py
-### What it does?
+### Serialize.py
+#### What it does?
 It builds the actual packet using the dictionary data specified by the users and creates a list of fields.
  
-### How it works?
+#### How it works?
 It initializes the data as a dictionary, which contains the fields specified by the users.
 
 It consists of two main functions:
@@ -118,12 +117,12 @@ packetize() takes in all the fields that were specifized through the dictionary 
 
 Another important function in the serialize.py is get_field() which either find and return a specified field that matches one of the elements in the fields array or return none if nothing is found.
 
-## SerializeEX.py  
+### SerializeEX.py  
   
-### What it does?
+#### What it does?
 It creates a variable called dnc_packet where the dictionary of packet is being sent to the Serialize.py 
 
-### How it works?
+#### How it works?
 As shown below the data is represented in a dictionary format and the data is passed as a parameter to the Serialize function present in the serialize.py program.
 
 
