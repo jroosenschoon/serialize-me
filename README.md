@@ -216,7 +216,7 @@ The dictionary formatting is represented in the form of a name field containing 
 #### What it does?
 This function deserializes gets the information of packet and data from the `test_deserialize.py` program and itterates through those values to display them in the correct and specificied format, like IPv4, IPv6 or HOST.
 
-### How it works?
+#### How it works?
 The init function initializes the packet, data, fields array, variables array and also calls a private function `readPacket()`.
 
 The `readPacket()` function iterates through all the parameters passed by `test_main.py` program. If it finds a dictionary parameter, then function understands that the value is a variable and that it should be itterated using a for loop. If it is not a dictionary, we do not use any loop to read it.
