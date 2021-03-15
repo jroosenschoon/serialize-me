@@ -102,7 +102,7 @@ For [deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/se
 
 ## Documentation
 ___
-###Serialize
+### Serialize
 Create a byte string from a dictionary of `"name": data` pairs representing fields in a packet.
 [serialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/serialize.py")
 ```python
