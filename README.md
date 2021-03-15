@@ -103,41 +103,63 @@ ___
 
 ## Package Structure
 ___
-## Utilities:
-### Field.py
-#### What it does?
+
+
+# Utilities
+## Field.py
+### What it does?
 It is a python program that represents and initializes a field in one of the packets.
 
-#### How it works?
+### How it works?
 
 The Field.py initializes the name, the size and the value of each field.
   
-It consists of two function which will be called based on the specified size of the field:
+It consists of two function which will be called based on the specified size of the field. The to_binary() function is used to convert value of a given field to binary. The to_hex() function is used to convert the value of a given field into hex.
   
-to_binary() is used to convert the value of a given field into binary
-
-to_hex() is used to convert the value of a given field into hex
-  
-  
-### Serialize.py
-#### What it does?
+## Serialize.py
+### What it does?
 It builds the actual packet using the dictionary data specified by the users and creates a list of fields.
  
-#### How it works?
+### How it works?
 It initializes the data as a dictionary, which contains the fields specified by the users.
 
-It consists of two main functions:
+The get_field() function either finds and returns a specified field that matches one of the elements in the fields array or return none if nothing is found. Then it consists of two functions that will be to create list of fields. The packetize() function takes in all the fields that were specifized through the dictionary variable called data and then converts it into a byte array.
 
-packetize() takes in all the fields that were specifized through the dictionary variable called data and then converts it into a byte array.
-
-Another important function in the serialize.py is get_field() which either find and return a specified field that matches one of the elements in the fields array or return none if nothing is found.
-
-### SerializeEX.py  
+## SerializeEX.py  
   
-#### What it does?
+### What it does?
 It creates a variable called dnc_packet where the dictionary of packet is being sent to the Serialize.py 
 
-#### How it works?
-As shown below the data is represented in a dictionary format and the data is passed as a parameter to the Serialize function present in the serialize.py program.
+### How it works?
+The data is represented in a dictionary format and the data is passed as a parameter to the Serialize function present in the serialize.py program.
 
+There could different formats of the dictionary. One format could be where the user specifies the size of the field and the value of the field, like `"name": (size, value)`. The second format could be where the user only specifies the size and the value defaults to 0, i.e., `"name": (size)`. The third format would be that a user can choose to neither size nor value, i.e., `"name": ()`, and the default values for size becomes 1 bit and value becomes 0. 
 
+A size can be a number that defaults to the number of bits or it could be a string like "2b" or "2B". 
+
+## test_new_deserialize.py
+
+### What it does?
+This python program passes a packet and a dictionary data to the new_deserialize.py file.
+
+### How it works?
+We create a variable named pack and assign it to value returned by the Deserialize function with a packet, a formatting dictionary as its two parameters. 
+
+Let us look at a detailed description of the second parameter:
+The dictionary formatting is represented in the form of a name field containing three values i.e., number of bytes, formatting string and variable. For clarification, an example of name field with the 3 values would be `'qcnt': ('1B','','Questions')`. The formatting string is implemented to give users different static options like a HOST domain or an IPv4. A variable is used as the third value of the name field so that the user will have the option to pass multiple questions to a DNS and/or get multiple answers for a value without any issues. 
+
+## new_deserialize.py
+
+### What it does?
+This function deserializes gets the information of packet and data from the test_new_deserialize.py program and itterates through those values to display them in the correct and specificied format, like IPv4, IPv6 or HOST.
+
+### How it works?
+The init function initializes the packet, data, fields array, variables array and also calls a private function readPacket().
+
+The readPacket() function iterates through all the parameters passed by test_new_deserialize.py program. If it finds a dictionary parameter, then function understands that the value is a variable and that it should be itterated using a for loop. If it is not a dictionary, we do not use any loop to read it.
+
+read_bit_string() reads the bit string value, like 1B, in the given in the dictionary data parameter and returns a the integer size and the format of bit string. If an empty bit string value is passed then the function returns 1 as the size for a bit with no formatting and no variable.
+
+The handle_custom_formatting() is a function that decides whether the bits are going to be formatted in IPv4, IPv6 or HOST.
+
+The get_field() function is used to save all an array of data, like an array of answers, as a field.
