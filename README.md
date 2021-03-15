@@ -9,6 +9,7 @@
 - [Basic Example](#Basic-Example)
 - [Packet Formatting](#Packet-formatting)
 - [Documentation](#Documentation)
+- [Utilities](#Utilities)
 
 ## Introduction
 
@@ -205,7 +206,7 @@ serializeme.Field(name, size, value)
 | `to_binary()` | Return a binary string of the field. Currently only works for static sizes. |     NA     | `str`  |
 | `to_hex()`    |  Return a hex string of the field. Currently only works for static sizes.   |     NA     | `str`  |
 
-## Documentation
+## Utilities
 
 ---
 
