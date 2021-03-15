@@ -10,11 +10,12 @@ ___
 
 ## Introduction
 ___
-
-
+The goal of `serializeme` is to provide a streamlined way to create networking packets and to extract the fields from networking packets. There are two primary classes:
+* `serialize.py` which will encode decimal values in a specified size into a byte array
+* `deserialize.py` which will decode a byte string given the way the bytes are laid out.
 ### Overview
 ___
-
+`serializeme` consists of the following components:
 | Component      | Description     | 
 | :------------- | :----------: | 
 |  [serializeme]("https://github.com/jroosenschoon/serialize-me/tree/main/serializeme") | serializeme is a library meant for building network packets from user-specified fields  | 
@@ -101,8 +102,38 @@ For [deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/se
 
 ## Documentation
 ___
+###Serialize
+Create a byte string from a dictionary of `"name": data` pairs representing fields in a packet.
+[serialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/serialize.py")
+```python
+serializeme.Serialize(data)
+```
+___
+### Parameters
+* **data**: **Dictionary**, the dictionary containing all of the fields in the format `"name": <field_Structure>` where `<field_Structure>` is one of the following:
+    * `()`: Creates a field with 1 bit of value 0.
+    * `N`: Creates a field with `N` bits of value 0. Note: `N` is a nonnegative number.
+    * `"Nb"`: Creates a field with `N` bits of value 0. Note: `N` is a nonnegative number.
+    * `"NB"`: Creates a field with `N` bytes of value 0. Note: `N` is a nonnegative number.
+    * `(N, M)`: Creates a field with `N` bits of value `M`. If `M` cannot be stored in `N` bits, an exception is thrown. 
+    * `("Nb", M)`: Creates a field with `N` bits of value `M`. If `M` cannot be stored in `N` bits, an exception is thrown. 
+    * `("NB", M)`: Creates a field with `N` bytes of value `M`. If `M` cannot be stored in `N` bytes, an exception is thrown. 
+    * `(KEYWORD, data)`: Creates a variable-length field that is ended by one of three possibilities, denoted by the `KEYWORD`. Possible values are:
+        * `serialize.PREFIX_LEN_NULL_TERM`: Creates a field that will automatically append the length of each element, then the actual element, and then after the at the end, a byte of zeros
+        * `serialize.NULL_TERMINATE`: Creates a field that will automatically add a byte of zeros at the end
+        * `serialize.PREFIX_LENGTH`: Creates a field that will automatically append the length of each element, then the actual element.
+### Methods
+____
+| Method      | Description     | Parameters | Return |
+| :------------- | :----------: | :-----:    | :---:  |
+| `packetize()`  | Convert all of the fields of the Serialize object into a byte string.| NA | bytes |
+| `get_field(field)`  | Return the specified field if found. Return `None` otherwise.| `field`: The name of the field to search for | `serializeme.Field` |
 
 ## Field.py
+
+## Utilities
+___
+### Field.py
 
 ### What it does?
 It is a program that initializes a field in one of the packets.
