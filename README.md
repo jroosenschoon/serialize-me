@@ -233,6 +233,24 @@ It initializes the data as a dictionary, which contains the fields specified by 
 
 The `get_field()` function either finds and returns a specified field that matches one of the elements in the fields array or return none if nothing is found. Then it consists of two functions that will be to create list of fields. The `packetize()` function takes in all the fields that were specifized through the dictionary variable called data and then converts it into a byte array.
 
+### deserialize.py
+
+#### What it does?
+
+This function deserializes gets the information of packet and data from the `test_main.py` program and itterates through those values to display them in the correct and specificied format, like IPv4, IPv6 or HOST.
+
+#### How it works?
+
+The init function initializes the packet, data, fields array, variables array and also calls a private function `readPacket()`.
+
+The `readPacket()` function iterates through all the parameters passed by `test_main.py` program. If it finds a dictionary parameter, then function understands that the value is a variable and that it should be itterated using a for loop. If it is not a dictionary, we do not use any loop to read it.
+
+`read_bit_string()` reads the bit string value, like 1B, in the given in the dictionary data parameter and returns a the integer size and the format of bit string. If an empty bit string value is passed then the function returns 1 as the size for a bit with no formatting and no variable.
+
+The `handle_custom_formatting()` is a function that decides whether the bits are going to be formatted in IPv4, IPv6 or HOST.
+
+The `get_field()` function is used to save all an array of data, like an array of answers, as a field.
+
 ### test_main.py
 
 #### What it does?
@@ -253,21 +271,3 @@ We create another variable named pack and test the `deserialize.py` function by 
 
 Let us look at a detailed description of the second parameter (formatting dictionary):
 The dictionary formatting is represented in the form of a name field containing three values i.e., number of bytes, formatting string and variable. For clarification, an example of name field with the 3 values would be `'qcnt': ('1B','','Questions')`. The formatting string is implemented to give users different static options like a HOST domain or an IPv4. A variable is used as the third value of the name field so that the user will have the option to pass multiple questions to a DNS and/or get multiple answers for a value without any issues.
-
-### deserialize.py
-
-#### What it does?
-
-This function deserializes gets the information of packet and data from the `test_main.py` program and itterates through those values to display them in the correct and specificied format, like IPv4, IPv6 or HOST.
-
-#### How it works?
-
-The init function initializes the packet, data, fields array, variables array and also calls a private function `readPacket()`.
-
-The `readPacket()` function iterates through all the parameters passed by `test_main.py` program. If it finds a dictionary parameter, then function understands that the value is a variable and that it should be itterated using a for loop. If it is not a dictionary, we do not use any loop to read it.
-
-`read_bit_string()` reads the bit string value, like 1B, in the given in the dictionary data parameter and returns a the integer size and the format of bit string. If an empty bit string value is passed then the function returns 1 as the size for a bit with no formatting and no variable.
-
-The `handle_custom_formatting()` is a function that decides whether the bits are going to be formatted in IPv4, IPv6 or HOST.
-
-The `get_field()` function is used to save all an array of data, like an array of answers, as a field.
