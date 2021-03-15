@@ -129,7 +129,42 @@ ____
 | `packetize()`  | Convert all of the fields of the Serialize object into a byte string.| NA | bytes |
 | `get_field(field)`  | Return the specified field if found. Return `None` otherwise.| `field`: The name of the field to search for | `serializeme.Field` |
 
-## Field.py
+### Field
+Create a basic field object that is used in `serializeme.Serialize` and `serializeme.Deserialize`
+[field.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/field.py")
+```python
+serializeme.Field(name, size, value)
+```
+___
+### Parameters
+* **name**: **str**, The name of the field.
+* **size**: **int** or **str**, The size, in bits of the field, or a string denoting a certain type of variable-length field. Possible values include:
+        * `serialize.PREFIX_LEN_NULL_TERM`: Creates a field that will automatically append the length of each element, then the actual element, and then after the at the end, a byte of zeros
+        * `serialize.NULL_TERMINATE`: Creates a field that will automatically add a byte of zeros at the end
+        * `serialize.PREFIX_LENGTH`: Creates a field that will automatically append the length of each element, then the actual element.
+* **value**: **int**, The value of the field, in decimal.
+____
+| Method      | Description     | Parameters | Return |
+| :------------- | :----------: | :-----:    | :---:  |
+| `to_binary()`  | Return a binary string of the field. Currently only works for static sizes.| NA | `str` |
+| `to_hex()`  | Return a hex string of the field. Currently only works for static sizes.| NA | `str` |
+
+
+### Deserialize
+[TODO: DESCRPTION]
+[deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/deserialize.py")
+```python
+serializeme.Deserialize(rsp, data)
+```
+___
+### Parameters
+* **rsp**: **[TODO DATA TYPE]**, [TODO DESCRIPTION] 
+### Methods
+____
+| Method      | Description     | Parameters | Return |
+| :------------- | :----------: | :-----:    | :---:  |
+| `[TODO METHOD NAME]`  | [TODO METHOD DESCR ]| [TODO PARAMETERS FOR METHOD] | [TODO RETURN TYPE FOR METHOD] |
+[TODO REPEAT FOR ALL NECESSARY METHODS]
 
 ## Utilities
 ___
