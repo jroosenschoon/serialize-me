@@ -80,19 +80,20 @@ For [serialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/seri
 | `(4, 3)`       | Field with 4 bits of value 3 | `(4, 3)` creates `0011` |
 | `("3b", 2)`    | Field with 3 bits of value 2 | `("3b", 2)` creates `010` |
 | `("2B", 255)`  | Field with 1 bytes of value 255 | `("2B", 255)` creates `0000000011111111` |
-|  `(KEYWORD, data)` | Create a variable-length field terminating by a specified way. Currently, there are three ways (see below) |  `(serialize.PREFIX_LEN_NULL_TERM, ("google", "com"))` creates 
+|  `(KEYWORD, data)` | Create a variable-length field terminating by a specified way. Currently, there are three ways (see below) |  `(serialize.PREFIX_LEN_NULL_TERM, ("google", "com"))` creates `0x06google0x03com0x00`
+
+
 creates a field that will automatically append the length of each element, then the actual element, and then after the at the end, a byte of zeros
 
 For [deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/deserialize.py"), the following formats are currently supported:
 
-| Format                                           |                                                 Description                                                 |                           Example                            |
-| :----------------------------------------------- | :---------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------: |
-| `(size, format, variable)`                       |                                               parameter order                                               |                              NA                              |
-| `(1B)`                                           |                               1 bytes of data, default formatting, no variable                               |                              NA                              |
-| `(serializeme.NULL_TERMINATE, serializeme.HOST)` |                null terminating length (bytes end in \00), format to hostname, no variable                 |                              NA                              |
-| `(2b, '', 'ANSWERS')`                            | 2 bytes of data , default formatting, variable ANSWERS (the result of this field will cycle through ANSWERS) |                        see next line                         |
-| `ANSWERS: { name: (2B, serializeme.HOST) }`      |  will _repeat_ according to ANWSERS value and get field name for 2 bytes of data and format as a hostname   | `acnt: (2b, '','ANSWERS'), ... ANSWERS: { dns answers data}` |
-
+| Format                                           |                                                 Description                                                  |                                              Example                                              |
+| :----------------------------------------------- | :----------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------: |
+| `(size, format, variable)`                       |                                               parameter order                                                |                                                NA                                                 |
+| `(1B)`                                           |                               1 bytes of data, default formatting, no variable                               |                                     creates a field of 1 byte                                     |
+| `(serializeme.NULL_TERMINATE, serializeme.HOST)` |                 null terminating length (bytes end in \x00), format to hostname, no variable                 | creates a variable length field depending on finding `0x00`. formats the result to a hostname format |
+| `(2b, '', 'ANSWERS')`                            | 2 bytes of data , default formatting, variable ANSWERS (the result of this field will cycle through ANSWERS) |                                           see next line                                           |
+| `ANSWERS: { name: (2B, serializeme.HOST) }`      |   will _repeat_ according to ANWSERS value and get field name for 2 bytes of data and format as a hostname   |                   `acnt: (2b, '','ANSWERS'), ... ANSWERS: { dns answers data}`                    |
 ## Documentation
 ___
 

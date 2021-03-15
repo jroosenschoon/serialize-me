@@ -9,7 +9,7 @@ sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sd.connect(('8.8.8.8', 53))
 flags = 1 << 8
 req = struct.pack('!HHHHHH', 17, flags, 1, 0, 0, 0)
-parts = 'jackgisel.com'.split('.')
+parts = 'google.com'.split('.')
 q = b''
 q2 = b''
 for part in parts:
