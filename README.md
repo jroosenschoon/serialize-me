@@ -129,6 +129,25 @@ ____
 | `packetize()`  | Convert all of the fields of the Serialize object into a byte string.| NA | bytes |
 | `get_field(field)`  | Return the specified field if found. Return `None` otherwise.| `field`: The name of the field to search for | `serializeme.Field` |
 
+
+### Deserialize
+[TODO: DESCRPTION]
+[deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/deserialize.py")
+```python
+serializeme.Deserialize(rsp, data)
+```
+___
+### Parameters
+* **rsp**: **[TODO DATA TYPE]**, [TODO DESCRIPTION] 
+* **data**: **[TODO DATA TYPE]**, [TODO DESCRIPTION]
+### Methods
+____
+| Method      | Description     | Parameters | Return |
+| :------------- | :----------: | :-----:    | :---:  |
+| `[TODO METHOD NAME]`  | [TODO METHOD DESCR ]| [TODO PARAMETERS FOR METHOD] | [TODO RETURN TYPE FOR METHOD] |
+[TODO REPEAT FOR ALL NECESSARY METHODS]
+
+
 ### Field
 Create a basic field object that is used in `serializeme.Serialize` and `serializeme.Deserialize`
 [field.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/field.py")
@@ -150,21 +169,9 @@ ____
 | `to_hex()`  | Return a hex string of the field. Currently only works for static sizes.| NA | `str` |
 
 
-### Deserialize
-[TODO: DESCRPTION]
-[deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/deserialize.py")
-```python
-serializeme.Deserialize(rsp, data)
-```
-___
-### Parameters
-* **rsp**: **[TODO DATA TYPE]**, [TODO DESCRIPTION] 
-### Methods
-____
-| Method      | Description     | Parameters | Return |
-| :------------- | :----------: | :-----:    | :---:  |
-| `[TODO METHOD NAME]`  | [TODO METHOD DESCR ]| [TODO PARAMETERS FOR METHOD] | [TODO RETURN TYPE FOR METHOD] |
-[TODO REPEAT FOR ALL NECESSARY METHODS]
+
+
+
 
 ## Utilities
 ___
