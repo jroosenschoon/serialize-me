@@ -168,18 +168,16 @@ serializeme.Deserialize(rsp, data)
 
 ### Parameters
 
-- **rsp**: **[TODO DATA TYPE]**, [TODO DESCRIPTION]
-- **data**: **[TODO DATA TYPE]**, [TODO DESCRIPTION]
+- **rsp**: **Packet**, pass in a packet to be deconstructed
+- **data**: **Dictionary**, the dictionary containing all of the fields in the format
 
 ### Methods
 
 ---
 
-| Method               |     Description      |          Parameters          |            Return             |
-| :------------------- | :------------------: | :--------------------------: | :---------------------------: |
-| `[TODO METHOD NAME]` | [TODO METHOD DESCR ] | [TODO PARAMETERS FOR METHOD] | [TODO RETURN TYPE FOR METHOD] |
-
-[TODO REPEAT FOR ALL NECESSARY METHODS]
+| Method                  |                Description                 |                    Parameters                     |       Return        |
+| :---------------------- | :----------------------------------------: | :-----------------------------------------------: | :-----------------: |
+| `get_field(field_name)` | returns the given field for the field_name | a field name that is part of the data constructor | `serializeme.Field` |
 
 ### Field
 
