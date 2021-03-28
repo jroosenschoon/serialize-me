@@ -1,3 +1,7 @@
+"""
+The serializeme module allow users to encode and decode network packets with ease.
+"""
+
 from .serialize import Serialize
 from .deserialize import Deserialize
 
