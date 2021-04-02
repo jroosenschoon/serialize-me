@@ -125,7 +125,7 @@ class Serialize:
                 temp_word += c
         # Add any leftovers to the byte array.
         if temp_byte:
-            b_array += temp_byte.encode()
+            b_array += self.__bits_to_bytes(temp_byte)
         if temp_word != "":
             b_array += temp_word.encode()
         return b_array
