@@ -76,13 +76,19 @@ class Serialize:
                 if field.size == PREFIX_LENGTH or field.size == PREFIX_LEN_NULL_TERM:
                     # Need to prefix the size of the value (in bytes) before adding the data.
                     # User can enter a list of values to be handled, so loop through each one.
-                    # TODO What if user enters a single value?
-                    for f in field.value:
+                    if isinstance(field.value, str):
                         # Add byte representing length.
-                        length_byte = "0" * (8 - len(bin(len(f))[2:])) + bin(len(f))[2:]
+                        length_byte = "0" * (8 - len(bin(len(field.value))[2:])) + bin(len(field.value))[2:]
                         bit_str += length_byte
                         # Add data directly - no conversions
-                        bit_str += f
+                        bit_str += field.value
+                    else:
+                        for f in field.value:
+                            # Add byte representing length.
+                            length_byte = "0" * (8 - len(bin(len(f))[2:])) + bin(len(f))[2:]
+                            bit_str += length_byte
+                            # Add data directly - no conversions
+                            bit_str += f
                 elif field.size == NULL_TERMINATE:
                     # Just need to add the data (without converting to binary) +  a byte of zeros.
                     bit_str += field.value + "0" * 8
@@ -112,10 +118,16 @@ class Serialize:
                 temp_byte += c
             else:
                 # We have non-bit. Accumulate in the temp_word.
+                # If there are any stray 0s or 1s, add the encoded version to our array.
+                if temp_byte:
+                    b_array += temp_byte.encode()
+                    temp_byte = ""
                 temp_word += c
         # Add any leftovers to the byte array.
-        b_array += self.__bits_to_bytes(temp_byte)
-        b_array += temp_word.encode()
+        if temp_byte:
+            b_array += temp_byte.encode()
+        if temp_word != "":
+            b_array += temp_word.encode()
         return b_array
 
     def get_field(self, field_name):
