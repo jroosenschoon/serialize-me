@@ -7,6 +7,7 @@ IPv4 = "IPv4"
 IPv6 = "IPv6"
 NULL_TERMINATE = "null_terminate"  # two \x00\x00
 PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
+PREFIX_LENGTH = "prefix_length" # \x03 = length of 3
 
 class Deserialize:
     # types of formatting
@@ -20,7 +21,12 @@ class Deserialize:
     }
     __struct_sizes = {
         'b': 'b',
-        'B': 'H'
+        'B': {
+            1: 'B',
+            2: 'H',
+            4: 'L',
+            8: 'Q'
+        }
     }
 
     def __init__(self, packet, data):
@@ -33,11 +39,9 @@ class Deserialize:
     def __read_portion(self, index, name, size, format, variable):
         length = size * self.__sizes[format]
         new_index = index + length
-
         struct_str = '!'
-        for i in range(0, int(size / 2)):
-            struct_str += self.__struct_sizes[format]
-        # print(name, index, new_index, size, format, struct_str, self.packet[index:new_index])
+        # for i in range(0, size):
+        struct_str += self.__struct_sizes[format][size]
         val = struct.unpack(struct_str, self.packet[index:new_index])
 
         if 'variable' in locals() and len(variable) > 0:
