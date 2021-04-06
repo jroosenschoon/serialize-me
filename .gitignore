@@ -4,3 +4,4 @@ __pycache__/
 /dist
 serializeme.egg-info/
 .DS_Store
+serializeme/ex.py
