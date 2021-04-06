@@ -12,7 +12,7 @@ from serializeme.field import Field
 NULL_TERMINATE = "null_terminate"  # Data + byte of zeros
 PREFIX_LENGTH = "prefix_length"  # Length of data (in bytes) + Data
 PREFIX_LEN_NULL_TERM = "prefix_len_null_term"  # Length of data (in bytes) + Data + bytes of zeros
-
+IPv4 = "ipv4"
 VAR_PREFIXES = [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM]
 
 
@@ -69,10 +69,16 @@ class Serialize:
             if field.size == 1:  # One bit, just add it to our bit string.
                 bit_str += str(field.value)
             else:
-                if field.size not in [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM]:
+                if field.size not in [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM, IPv4]:
                     # Fixed size. Generate number of zeros to make the specified size
                     # and then the binary of the field's value.
                     bit_str += "0" * (field.size - len(bin(field.value)[2:])) + bin(field.value)[2:]
+                if field.size == IPv4:
+                    # IPv4 address.
+                    parts = field.value.split(".")
+                    for part in parts:
+                        bit_str += "0"*(8 - len(bin(int(part))[2:])) + bin(int(part))[2:]
+
                 if field.size == PREFIX_LENGTH or field.size == PREFIX_LEN_NULL_TERM:
                     # Need to prefix the size of the value (in bytes) before adding the data.
                     # User can enter a list of values to be handled, so loop through each one.
@@ -193,6 +199,8 @@ class Serialize:
                         self.fields.append(Field(name=name, value=stuff[1], size=PREFIX_LENGTH))
                     elif stuff[0].lower() == PREFIX_LEN_NULL_TERM:
                         self.fields.append(Field(name=name, value=stuff[1], size=PREFIX_LEN_NULL_TERM))
+                    elif stuff[0].lower() == IPv4:
+                        self.fields.append(Field(name=name, value=stuff[1], size=IPv4))
                 elif isinstance(stuff[0], int):
                     if not self.__check_bit_size(stuff[1], stuff[0]):
                         raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(stuff[0]) + " bits.")
