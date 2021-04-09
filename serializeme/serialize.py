@@ -185,13 +185,13 @@ class Serialize:
                 if isinstance(stuff[0], str):
                     if "b" in stuff[0]: # Bits
                         size = int(stuff[0][:stuff[0].lower().index("b")])
-                        if not self.__check_bit_size(stuff[1], size):
-                            raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
+                       # if not self.__check_bit_size(stuff[1], size):
+                        #    raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
                         self.fields.append(Field(name=name, value=stuff[1], size=size))
                     elif "B" in stuff[0]: # Bytes
                         size = int(stuff[0][:stuff[0].lower().index("b")]) * 8
-                        if not self.__check_bit_size(stuff[1], size):
-                            raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
+                       # if not self.__check_bit_size(stuff[1], size):
+                         #   raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
                         self.fields.append(Field(name=name, value=stuff[1], size=size))
                     elif stuff[0].lower() == NULL_TERMINATE:
                         self.fields.append(Field(name=name, value=stuff[1], size=NULL_TERMINATE))
@@ -202,8 +202,8 @@ class Serialize:
                     elif stuff[0].lower() == IPv4:
                         self.fields.append(Field(name=name, value=stuff[1], size=IPv4))
                 elif isinstance(stuff[0], int):
-                    if not self.__check_bit_size(stuff[1], stuff[0]):
-                        raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(stuff[0]) + " bits.")
+                   # if not self.__check_bit_size(stuff[1], stuff[0]):
+                     #   raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(stuff[0]) + " bits.")
                     self.fields.append(Field(name=name, value=stuff[1], size=stuff[0]))
 
     def __str__(self):
