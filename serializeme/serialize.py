@@ -72,7 +72,10 @@ class Serialize:
                 if field.size not in [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM, IPv4]:
                     # Fixed size. Generate number of zeros to make the specified size
                     # and then the binary of the field's value.
-                    bit_str += "0" * (field.size - len(bin(field.value)[2:])) + bin(field.value)[2:]
+                    if isinstance(field.value, int):
+                        bit_str += "0" * (field.size - len(bin(field.value)[2:])) + bin(field.value)[2:]
+                    else:
+                        bit_str += field.value.decode()
                 if field.size == IPv4:
                     # IPv4 address.
                     parts = field.value.split(".")
@@ -87,7 +90,7 @@ class Serialize:
                         length_byte = "0" * (8 - len(bin(len(field.value))[2:])) + bin(len(field.value))[2:]
                         bit_str += length_byte
                         # Add data directly - no conversions
-                        bit_str += field.value
+                        bit_str += field.value.encode()
                     else:
                         for f in field.value:
                             # Add byte representing length.
