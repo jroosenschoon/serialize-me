@@ -1,6 +1,4 @@
 import serializeme
-import socket
-
 from serializeme import Serialize, Deserialize
 import socket
 
@@ -44,7 +42,7 @@ dns_packet = Serialize({
             "ancount": "16b",
             "nscount": 16,
             "arcount": 16,
-            "qname": (serializeme.PREFIX_LEN_NULL_TERM, ("google", "com")),
+            "qname": (serializeme.PREFIX_LEN_NULL_TERM, ("yahoo", "com")),
             "qtype": (16, 1),
             "qclass": (16, 1)
             })
