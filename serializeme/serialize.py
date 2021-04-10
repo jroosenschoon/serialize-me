@@ -75,7 +75,8 @@ class Serialize:
                     if isinstance(field.value, int):
                         bit_str += "0" * (field.size - len(bin(field.value)[2:])) + bin(field.value)[2:]
                     else:
-                        bit_str += field.value
+                        if isinstance(field.value, bytes):
+                            bit_str += str(field.value, 'UTF=8')
                 if field.size == IPv4:
                     # IPv4 address.
                     parts = field.value.split(".")
