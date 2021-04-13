@@ -41,8 +41,18 @@ class Deserialize:
         new_index = index + length
         struct_str = '!'
         # for i in range(0, size):
-        struct_str += self.__struct_sizes[format][size]
+        if size in [1,2,4,8]:
+            struct_str += self.__struct_sizes[format][size]
+        else:
+            for i in range(0,size):
+                struct_str += 'B'
         val = struct.unpack(struct_str, self.packet[index:new_index])
+
+        if isinstance(val, list):
+            sum = 0
+            for i in val:
+                sum += i
+            val = sum
 
         if 'variable' in locals() and len(variable) > 0:
             self.variables[variable] = val[0]
@@ -121,6 +131,10 @@ class Deserialize:
                                 val = self.__handle_custom_formatting(value_format, byte_queue)
                                 f = Field(sub_name, format_str, val)
                                 new_index = back  # dont forgot to update index for variable length
+                            elif format_str == PREFIX_LENGTH:
+                                size = int.from_bytes(self.packet[index:index+1], "big")
+                                index = index + 1
+                                (new_index, f) = self.__read_portion(index, name, size, 'B', '')
                             else:
                                 (size, format) = self.__read_bit_string(format_str)
                                 length = size * self.__sizes[format]
@@ -158,13 +172,21 @@ class Deserialize:
                         val = self.__handle_custom_formatting(value_format, byte_queue)
                         f = Field(name, str(back - index) + 'B', val)
                         new_index = back
+                    elif format_str == PREFIX_LENGTH:
+                        size = int.from_bytes(self.packet[index:index+1], "big")
+                        index = index + 1
+                        (new_index, f) = self.__read_portion(index, name, size, 'B', '')
                     else:
                         (size, format) = self.__read_bit_string(format_str)
                         (new_index, f) = self.__read_portion(index, name, size, format, variable)
                 else:
-                    (size, format) = self.__read_bit_string(stuff)
-                    variable = ""
-                    (new_index, f) = self.__read_portion(index, name, size, format, variable)
+                    if stuff == PREFIX_LENGTH:
+                        size = int.from_bytes(self.packet[index:index+1], "big")
+                        index = index + 1
+                        (new_index, f) = self.__read_portion(index, name, size, 'B', '')
+                    else:
+                        (size, format) = self.__read_bit_string(stuff)
+                        (new_index, f) = self.__read_portion(index, name, size, format, '')
 
                 self.fields.append(f)
                 index = new_index
