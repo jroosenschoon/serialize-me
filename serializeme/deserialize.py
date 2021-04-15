@@ -49,7 +49,6 @@ class Deserialize:
         val = struct.unpack(struct_str, self.packet[index:new_index])
 
         if len(val) > 1:
-            print(''.join(chr(i) for i in val))
             val = ''.join(chr(i) for i in val)
 
 
@@ -202,14 +201,5 @@ class Deserialize:
                 return f
             # elif if variables
         return None
-
-
-rsp = b'\x01\x06cs158b\x08Pa55word'
-
-pck = Deserialize(rsp, {
-    "VER": "1B",
-    "ID": PREFIX_LENGTH,
-    "PW": PREFIX_LENGTH
-})
 
 
