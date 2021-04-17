@@ -284,6 +284,6 @@ class Deserialize:
 #     }
 # })
 
-# print(pck.get_field("VER").value)
-# print(pck.get_field("NAUTHS").value)
+# print(pck.get_value("VER"))
+# print(pck.get_value("NAUTHS"))
 # print(pck.get_value("AUTHS"))
