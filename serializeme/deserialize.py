@@ -41,22 +41,16 @@ class Deserialize:
         length = size * self.__sizes[format]
         new_index = index + length
         struct_str = '!'
-        # for i in range(0, size):
-        # if size in [1,2,4,8]:
-        #     struct_str += self.__struct_sizes[format][size]
-        # else:
-        for i in range(0, size):
-            struct_str += 'B'
+
+        if size in [1, 2, 4, 8]:
+            struct_str += self.__struct_sizes[format][size]
+        else:
+            for i in range(0, size):
+                struct_str += 'B'
         val = struct.unpack(struct_str, self.packet[index:new_index])
 
         if len(val) > 1:
             val = ''.join(chr(i) for i in val)
-
-        # if isinstance(val, list):
-        #     sum = 0
-        #     for i in val:
-        #         sum += i
-        #     val = sum
 
         if 'variable' in locals() and len(variable) > 0:
             self.variables[variable] = val[0]
@@ -184,11 +178,20 @@ class Deserialize:
                         f = Field(name, str(back - index) + 'B', val)
                         new_index = back
                     elif format_str == PREFIX_LENGTH:
-                        size = int.from_bytes(
-                            self.packet[index:index+1], "big")
-                        index = index + 1
-                        (new_index, f) = self.__read_portion(
-                            index, name, size, 'B', '')
+                        if value_format != None:
+                            size = int.from_bytes(
+                                self.packet[index:index+1], "big")
+                            val = self.__handle_custom_formatting(
+                                value_format, self.packet[index:index+size+1])
+                            f = Field(name, str(size) + 'B', val)
+                            new_index = index + size + 1
+                            print(self.packet[new_index:len(self.packet)])
+                        else:
+                            size = int.from_bytes(
+                                self.packet[index:index+1], "big")
+                            index = index + 1
+                            (new_index, f) = self.__read_portion(
+                                index, name, size, 'B', '')
                     else:
                         if value_format != None:
                             (size, format) = self.__read_bit_string(format_str)
@@ -230,3 +233,26 @@ class Deserialize:
                 return f
             # elif if variables
         return None
+
+
+# pack = Deserialize(b'\x32\xff\xff\xff\xff', {
+#     'id': '1B',
+#     "dest": ('4B', IPv4)
+# })
+# print(pack.get_field('id'))
+
+# print(pack.get_field('dest'))
+
+
+# pack = Deserialize(b'\x05\x01\x00\x03\x0ewww.google.com\x00P', {
+#     "VER": "1B",
+#     "CMD": "1B",
+#     "RSV": "1B",
+#     "ATYP": "1B",
+#     "DADDR": (PREFIX_LENGTH, HOST),
+#     "DPORT": "2B",
+# })
+
+
+# print(pack.get_field('DADDR'))
+# print(pack.get_field('DPORT'))

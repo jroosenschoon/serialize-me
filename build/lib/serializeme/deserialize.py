@@ -7,7 +7,8 @@ IPv4 = "IPv4"
 IPv6 = "IPv6"
 NULL_TERMINATE = "null_terminate"  # two \x00\x00
 PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
-PREFIX_LENGTH = "prefix_length" # \x03 = length of 3
+PREFIX_LENGTH = "prefix_length"  # \x03 = length of 3
+
 
 class Deserialize:
     # types of formatting
@@ -40,19 +41,16 @@ class Deserialize:
         length = size * self.__sizes[format]
         new_index = index + length
         struct_str = '!'
-        # for i in range(0, size):
-        if size in [1,2,4,8]:
+
+        if size in [1, 2, 4, 8]:
             struct_str += self.__struct_sizes[format][size]
         else:
-            for i in range(0,size):
+            for i in range(0, size):
                 struct_str += 'B'
         val = struct.unpack(struct_str, self.packet[index:new_index])
 
-        if isinstance(val, list):
-            sum = 0
-            for i in val:
-                sum += i
-            val = sum
+        if len(val) > 1:
+            val = ''.join(chr(i) for i in val)
 
         if 'variable' in locals() and len(variable) > 0:
             self.variables[variable] = val[0]
@@ -87,7 +85,8 @@ class Deserialize:
     def __format_ipv4(self, bites):
         address = bites.hex()
         s = str(address)
-        ip_address = ('.'.join(str(int(i, 16)) for i in ([s[i:i + 2] for i in range(0, len(s), 2)])))
+        ip_address = ('.'.join(str(int(i, 16))
+                      for i in ([s[i:i + 2] for i in range(0, len(s), 2)])))
         return ip_address
 
     def __format_ipv6(self, bites):
@@ -128,23 +127,28 @@ class Deserialize:
                                         byte_queue += self.packet[back:front]
                                     front += 1
                                     back += 1
-                                val = self.__handle_custom_formatting(value_format, byte_queue)
+                                val = self.__handle_custom_formatting(
+                                    value_format, byte_queue)
                                 f = Field(sub_name, format_str, val)
                                 new_index = back  # dont forgot to update index for variable length
                             elif format_str == PREFIX_LENGTH:
-                                size = int.from_bytes(self.packet[index:index+1], "big")
+                                size = int.from_bytes(
+                                    self.packet[index:index+1], "big")
                                 index = index + 1
-                                (new_index, f) = self.__read_portion(index, name, size, 'B', '')
+                                (new_index, f) = self.__read_portion(
+                                    index, name, size, 'B', '')
                             else:
                                 (size, format) = self.__read_bit_string(format_str)
                                 length = size * self.__sizes[format]
                                 new_index = index + length
                                 dirty_bytes = self.packet[index:new_index]
-                                val = self.__handle_custom_formatting(value_format, dirty_bytes)
+                                val = self.__handle_custom_formatting(
+                                    value_format, dirty_bytes)
                                 f = Field(sub_name, new_index - index, val)
                         else:
                             (size, format) = self.__read_bit_string(sub_stuff)
-                            (new_index, f) = self.__read_portion(index, sub_name, size, format, "")
+                            (new_index, f) = self.__read_portion(
+                                index, sub_name, size, format, "")
                         data.append(f)
                         index = new_index
                     all_data.append(data)
@@ -169,24 +173,56 @@ class Deserialize:
                                 byte_queue += self.packet[back:front]
                             front += 1
                             back += 1
-                        val = self.__handle_custom_formatting(value_format, byte_queue)
+                        val = self.__handle_custom_formatting(
+                            value_format, byte_queue)
                         f = Field(name, str(back - index) + 'B', val)
                         new_index = back
                     elif format_str == PREFIX_LENGTH:
-                        size = int.from_bytes(self.packet[index:index+1], "big")
-                        index = index + 1
-                        (new_index, f) = self.__read_portion(index, name, size, 'B', '')
+                        if value_format != None:
+                            size = int.from_bytes(
+                                self.packet[index:index+1], "big")
+                            val = self.__handle_custom_formatting(
+                                value_format, self.packet[index:index+size+1])
+                            f = Field(name, str(size) + 'B', val)
+                            new_index = index + size + 1
+                            print(self.packet[new_index:len(self.packet)])
+                        else:
+                            size = int.from_bytes(
+                                self.packet[index:index+1], "big")
+                            index = index + 1
+                            (new_index, f) = self.__read_portion(
+                                index, name, size, 'B', '')
                     else:
-                        (size, format) = self.__read_bit_string(format_str)
-                        (new_index, f) = self.__read_portion(index, name, size, format, variable)
+                        if value_format != None:
+                            (size, format) = self.__read_bit_string(format_str)
+                            c = 0
+                            front = index + 1
+                            back = index
+                            byte_queue = b''
+                            while c < size:
+                                byte_queue += self.packet[back:front]
+                                front += 1
+                                back += 1
+                                c = c + 1
+                            val = self.__handle_custom_formatting(
+                                value_format, byte_queue)
+                            f = Field(name, str(back - index) + 'B', val)
+                            new_index = back
+                        else:
+                            (size, format) = self.__read_bit_string(format_str)
+                            (new_index, f) = self.__read_portion(
+                                index, name, size, format, variable)
                 else:
                     if stuff == PREFIX_LENGTH:
-                        size = int.from_bytes(self.packet[index:index+1], "big")
+                        size = int.from_bytes(
+                            self.packet[index:index+1], "big")
                         index = index + 1
-                        (new_index, f) = self.__read_portion(index, name, size, 'B', '')
+                        (new_index, f) = self.__read_portion(
+                            index, name, size, 'B', '')
                     else:
                         (size, format) = self.__read_bit_string(stuff)
-                        (new_index, f) = self.__read_portion(index, name, size, format, '')
+                        (new_index, f) = self.__read_portion(
+                            index, name, size, format, '')
 
                 self.fields.append(f)
                 index = new_index
@@ -197,3 +233,26 @@ class Deserialize:
                 return f
             # elif if variables
         return None
+
+
+# pack = Deserialize(b'\x32\xff\xff\xff\xff', {
+#     'id': '1B',
+#     "dest": ('4B', IPv4)
+# })
+# print(pack.get_field('id'))
+
+# print(pack.get_field('dest'))
+
+
+# pack = Deserialize(b'\x05\x01\x00\x03\x0ewww.google.com\x00P', {
+#     "VER": "1B",
+#     "CMD": "1B",
+#     "RSV": "1B",
+#     "ATYP": "1B",
+#     "DADDR": (PREFIX_LENGTH, HOST),
+#     "DPORT": "2B",
+# })
+
+
+# print(pack.get_field('DADDR'))
+# print(pack.get_field('DPORT'))
