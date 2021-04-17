@@ -193,9 +193,9 @@ class Deserialize:
                                 self.packet[index:index+1], "big")
                             index = index + 1
                             (new_index, f) = self.__read_portion(
-                                index, name, size, 'B', '')
+                                index, name, size, 'B', variable)
                     else:
-                        if value_format != None:
+                        if value_format in [HOST, IPv4, IPv6]:
                             (size, format) = self.__read_bit_string(format_str)
                             c = 0
                             front = index + 1
@@ -236,6 +236,10 @@ class Deserialize:
             # elif if variables
         return None
 
+    def get_value(self, field_name):
+        return self.get_field(field_name).value
+
+# TODO: Fix test cases into file lol
 
 # pack = Deserialize(b'\x32\xff\xff\xff\xff', {
 #     'id': '1B',
@@ -269,3 +273,17 @@ class Deserialize:
 # print(pck.get_field("VER").value)
 # print(pck.get_field("ID").value)
 # print(pck.get_field("PW").value)
+
+# rsp = b'\x01\x03\x00\x01\x02'
+
+# pck = Deserialize(rsp, {
+#     "VER": "1B",
+#     "NAUTHS": ('1B', "", "AUTHS"),
+#     "AUTHS": {
+#         'val': '1B'
+#     }
+# })
+
+# print(pck.get_field("VER").value)
+# print(pck.get_field("NAUTHS").value)
+# print(pck.get_value("AUTHS"))
