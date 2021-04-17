@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.0.17'
+VERSION = '0.0.18'
 DESCRIPTION = 'Python package meant to serialize/deserialize network packets.'
 LONG_DESCRIPTION = 'Python package meant to serialize/deserialize network packets sent over the network. By specifying' \
                    'a format, the package will automatically extract data from a packet or insert data into a packet.'

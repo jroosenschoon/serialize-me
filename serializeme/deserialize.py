@@ -237,35 +237,35 @@ class Deserialize:
         return None
 
 
-pack = Deserialize(b'\x32\xff\xff\xff\xff', {
-    'id': '1B',
-    "dest": ('4B', IPv4)
-})
-print(pack.get_field('id'))
+# pack = Deserialize(b'\x32\xff\xff\xff\xff', {
+#     'id': '1B',
+#     "dest": ('4B', IPv4)
+# })
+# print(pack.get_field('id'))
 
-print(pack.get_field('dest'))
-
-
-pack = Deserialize(b'\x05\x01\x00\x03\x0ewww.google.com\x00P', {
-    "VER": "1B",
-    "CMD": "1B",
-    "RSV": "1B",
-    "ATYP": "1B",
-    "DADDR": (PREFIX_LENGTH, HOST),
-    "DPORT": "2B",
-})
+# print(pack.get_field('dest'))
 
 
-print(pack.get_field('DADDR'))
-print(pack.get_field('DPORT'))
-rsp = b'\x01\x06cs158b\x08Pa55word'
+# pack = Deserialize(b'\x05\x01\x00\x03\x0ewww.google.com\x00P', {
+#     "VER": "1B",
+#     "CMD": "1B",
+#     "RSV": "1B",
+#     "ATYP": "1B",
+#     "DADDR": (PREFIX_LENGTH, HOST),
+#     "DPORT": "2B",
+# })
 
-pck = Deserialize(rsp, {
-    "VER": "1B",
-    "ID": PREFIX_LENGTH,
-    "PW": PREFIX_LENGTH
-})
 
-print(pck.get_field("VER").value)
-print(pck.get_field("ID").value)
-print(pck.get_field("PW").value)
+# print(pack.get_field('DADDR'))
+# print(pack.get_field('DPORT'))
+# rsp = b'\x01\x06cs158b\x08Pa55word'
+
+# pck = Deserialize(rsp, {
+#     "VER": "1B",
+#     "ID": PREFIX_LENGTH,
+#     "PW": PREFIX_LENGTH
+# })
+
+# print(pck.get_field("VER").value)
+# print(pck.get_field("ID").value)
+# print(pck.get_field("PW").value)
