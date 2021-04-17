@@ -53,9 +53,9 @@ class Deserialize:
             val = ''.join(chr(i) for i in val)
 
         if 'variable' in locals() and len(variable) > 0:
-            self.variables[variable] = val[0]
+            self.variables[variable] = val
 
-        f = Field(name, length, val[0])
+        f = Field(name, length, val)
 
         return [new_index, f]
 
@@ -256,3 +256,15 @@ class Deserialize:
 
 # print(pack.get_field('DADDR'))
 # print(pack.get_field('DPORT'))
+
+# rsp = b'\x01\x06cs158b\x08Pa55word'
+#
+# pck = Deserialize(rsp, {
+#     "VER": "1B",
+#     "ID": PREFIX_LENGTH,
+#     "PW": PREFIX_LENGTH
+# })
+#
+# print(pck.get_field("VER").value)
+# print(pck.get_field("ID").value)
+# print(pck.get_field("PW").value)
