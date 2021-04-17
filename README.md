@@ -151,10 +151,11 @@ serializeme.Serialize(data)
 
 ---
 
-| Method             |                              Description                              |                  Parameters                  |       Return        |
-| :----------------- | :-------------------------------------------------------------------: | :------------------------------------------: | :-----------------: |
-| `packetize()`      | Convert all of the fields of the Serialize object into a byte string. |                      NA                      |        bytes        |
-| `get_field(field)` |     Return the specified field if found. Return `None` otherwise.     | `field`: The name of the field to search for | `serializeme.Field` |
+| Method             |                               Description                                |                  Parameters                  |          Return           |
+| :----------------- | :----------------------------------------------------------------------: | :------------------------------------------: | :-----------------------: |
+| `packetize()`      |  Convert all of the fields of the Serialize object into a byte string.   |                      NA                      |           bytes           |
+| `get_field(field)` |      Return the specified field if found. Return `None` otherwise.       | `field`: The name of the field to search for |    `serializeme.Field`    |
+| `get_value(field)` | Return the specified value of a field if found. Return `None` otherwise. | `field`: The name of the field to search for | `serializeme.Field.value` |
 
 ### Deserialize
 
