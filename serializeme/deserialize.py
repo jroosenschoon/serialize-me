@@ -42,15 +42,18 @@ class Deserialize:
         new_index = index + length
         struct_str = '!'
 
-        if size in [1, 2, 4, 8]:
+        if size in [1, 2, 4]:
             struct_str += self.__struct_sizes[format][size]
         else:
             for i in range(0, size):
                 struct_str += 'B'
+
         val = struct.unpack(struct_str, self.packet[index:new_index])
 
         if len(val) > 1:
             val = ''.join(chr(i) for i in val)
+        else:
+            val = val[0]
 
         if 'variable' in locals() and len(variable) > 0:
             self.variables[variable] = val
@@ -185,7 +188,6 @@ class Deserialize:
                                 value_format, self.packet[index:index+size+1])
                             f = Field(name, str(size) + 'B', val)
                             new_index = index + size + 1
-                            print(self.packet[new_index:len(self.packet)])
                         else:
                             size = int.from_bytes(
                                 self.packet[index:index+1], "big")
@@ -235,35 +237,35 @@ class Deserialize:
         return None
 
 
-# pack = Deserialize(b'\x32\xff\xff\xff\xff', {
-#     'id': '1B',
-#     "dest": ('4B', IPv4)
-# })
-# print(pack.get_field('id'))
+pack = Deserialize(b'\x32\xff\xff\xff\xff', {
+    'id': '1B',
+    "dest": ('4B', IPv4)
+})
+print(pack.get_field('id'))
 
-# print(pack.get_field('dest'))
-
-
-# pack = Deserialize(b'\x05\x01\x00\x03\x0ewww.google.com\x00P', {
-#     "VER": "1B",
-#     "CMD": "1B",
-#     "RSV": "1B",
-#     "ATYP": "1B",
-#     "DADDR": (PREFIX_LENGTH, HOST),
-#     "DPORT": "2B",
-# })
+print(pack.get_field('dest'))
 
 
-# print(pack.get_field('DADDR'))
-# print(pack.get_field('DPORT'))
-# rsp = b'\x01\x06cs158b\x08Pa55word'
-#
-# pck = Deserialize(rsp, {
-#     "VER": "1B",
-#     "ID": PREFIX_LENGTH,
-#     "PW": PREFIX_LENGTH
-# })
-#
-# print(pck.get_field("VER").value)
-# print(pck.get_field("ID").value)
-# print(pck.get_field("PW").value)
+pack = Deserialize(b'\x05\x01\x00\x03\x0ewww.google.com\x00P', {
+    "VER": "1B",
+    "CMD": "1B",
+    "RSV": "1B",
+    "ATYP": "1B",
+    "DADDR": (PREFIX_LENGTH, HOST),
+    "DPORT": "2B",
+})
+
+
+print(pack.get_field('DADDR'))
+print(pack.get_field('DPORT'))
+rsp = b'\x01\x06cs158b\x08Pa55word'
+
+pck = Deserialize(rsp, {
+    "VER": "1B",
+    "ID": PREFIX_LENGTH,
+    "PW": PREFIX_LENGTH
+})
+
+print(pck.get_field("VER").value)
+print(pck.get_field("ID").value)
+print(pck.get_field("PW").value)
