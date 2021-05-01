@@ -91,7 +91,7 @@ class Serialize:
                         length_byte = "0" * (8 - len(bin(len(field.value))[2:])) + bin(len(field.value))[2:]
                         bit_str += length_byte
                         # Add data directly - no conversions
-                        bit_str += field.value.encode()
+                        bit_str += field.value
                     else:
                         for f in field.value:
                             # Add byte representing length.
@@ -224,3 +224,6 @@ class Serialize:
                 s += field.name + ": variable size: " + str(field.size) + ", with value " + str(field.value) + ".\n"
 
         return s
+
+
+

@@ -11,13 +11,8 @@ PREFIX_LENGTH = "prefix_length"  # \x03 = length of 3
 
 
 class Deserialize:
-    # types of formatting
-
-    # PREFIX_LENGTH  = "prefix_length"
-    # PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
-
     __sizes = {
-        # 'b': 1, # bit
+        'b': 1,  # bit
         'B': 1  # byte
     }
     __struct_sizes = {
@@ -110,7 +105,26 @@ class Deserialize:
     def __readPacket(self):
         index = 0
         for name, stuff in self.data.items():
-            if type(stuff) == dict:
+            if '!!' in name:
+                # Handle the bit issue
+                (size, n) = self.__read_bit_string(name[2:])
+                new_index = index + size
+                bits = bin(int.from_bytes(
+                    self.packet[index:new_index], byteorder="big")).strip('0b')
+                while len(bits) < 8:
+                    bits = "0" + bits
+                ind = 0
+                for thing in stuff:
+                    (s, form) = self.__read_bit_string(stuff[thing])
+                    new_ind = ind + s
+                    val = bits[ind:new_ind]
+                    val = int(val, 2)
+                    fp = Field(thing, s, val)
+                    self.fields.append(fp)
+                    ind = new_ind
+                index = new_index
+
+            elif type(stuff) == dict:
                 old_index = index  # save for length
                 all_data = []
                 for i in range(0, self.variables[name]):
@@ -241,6 +255,7 @@ class Deserialize:
 
 # TODO: Fix test cases into file lol
 
+
 # pack = Deserialize(b'\x32\xff\xff\xff\xff', {
 #     'id': '1B',
 #     "dest": ('4B', IPv4)
@@ -287,3 +302,14 @@ class Deserialize:
 # print(pck.get_value("VER"))
 # print(pck.get_value("NAUTHS"))
 # print(pck.get_value("AUTHS"))
+
+# pck = Deserialize(b'\x41', {
+#     "!!1B": {'b0': '',
+#              'b1': '3b',
+#              'b2': '4b',
+#              }
+# })
+
+# print(pck.get_value("b0"))
+# print(pck.get_value("b1"))
+# print(pck.get_value("b2"))
