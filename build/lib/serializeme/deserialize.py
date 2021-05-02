@@ -111,7 +111,7 @@ class Deserialize:
                 new_index = index + size
                 bits = bin(int.from_bytes(
                     self.packet[index:new_index], byteorder="big")).strip('0b')
-                while len(bits) < 8:
+                while len(bits) < size * 8:
                     bits = "0" + bits
                 ind = 0
                 for thing in stuff:
@@ -303,13 +303,17 @@ class Deserialize:
 # print(pck.get_value("NAUTHS"))
 # print(pck.get_value("AUTHS"))
 
-# pck = Deserialize(b'\x41', {
-#     "!!1B": {'b0': '',
+# pck = Deserialize(b'\x41\x33', {
+#     "!!2B": {'b0': '',
 #              'b1': '3b',
 #              'b2': '4b',
+#              'b3': '4b',
+#              'b4': '4b',
 #              }
 # })
 
 # print(pck.get_value("b0"))
 # print(pck.get_value("b1"))
 # print(pck.get_value("b2"))
+# print(pck.get_value("b3"))
+# print(pck.get_value("b4"))
