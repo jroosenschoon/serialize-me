@@ -163,9 +163,36 @@ class Deserialize:
                                     value_format, dirty_bytes)
                                 f = Field(sub_name, new_index - index, val)
                         else:
-                            (size, format) = self.__read_bit_string(sub_stuff)
-                            (new_index, f) = self.__read_portion(
-                                index, sub_name, size, format, "")
+                            if sub_stuff == NULL_TERMINATE or sub_stuff == PREFIX_LEN_NULL_TERM:
+                                null_count = 0
+                                front = index + 1
+                                back = index
+                                byte_queue = b''
+                                while null_count < 1:
+                                    if self.packet[back:front] == b'\x00':
+                                        null_count += 1
+                                        break
+                                    else:
+                                        byte_queue += self.packet[back:front]
+                                    front += 1
+                                    back += 1
+                                if value_format != "":
+                                    val = self.__handle_custom_formatting(
+                                        value_format, byte_queue)
+                                else:
+                                    val = self.__format_hostname(byte_queue)
+                                f = Field(sub_name, sub_stuff, val)
+                                new_index = back  # dont forgot to update index for variable length
+                            elif sub_stuff == PREFIX_LENGTH:
+                                size = int.from_bytes(
+                                    self.packet[index:index+1], "big")
+                                index = index + 1
+                                (new_index, f) = self.__read_portion(
+                                    index, name, size, 'B', '')
+                            else:
+                                (size, format) = self.__read_bit_string(sub_stuff)
+                                (new_index, f) = self.__read_portion(
+                                    index, sub_name, size, format, "")
                         data.append(f)
                         index = new_index
                     all_data.append(data)
@@ -229,7 +256,23 @@ class Deserialize:
                             (new_index, f) = self.__read_portion(
                                 index, name, size, format, variable)
                 else:
-                    if stuff == PREFIX_LENGTH:
+                    if stuff == NULL_TERMINATE or stuff == PREFIX_LEN_NULL_TERM:
+                        null_count = 0
+                        front = index + 1
+                        back = index
+                        byte_queue = b''
+                        while null_count < 1:
+                            if (self.packet[back:front] == b'\x00'):
+                                null_count += 1
+                            else:
+                                byte_queue += self.packet[back:front]
+                            front += 1
+                            back += 1
+                        val = self.__handle_custom_formatting(
+                            value_format, byte_queue)
+                        f = Field(name, str(back - index) + 'B', val)
+                        new_index = back
+                    elif stuff == PREFIX_LENGTH:
                         size = int.from_bytes(
                             self.packet[index:index+1], "big")
                         index = index + 1
@@ -317,3 +360,32 @@ class Deserialize:
 # print(pck.get_value("b2"))
 # print(pck.get_value("b3"))
 # print(pck.get_value("b4"))
+
+# # DNS example
+# dns_request = {
+#     "ID": "2B",
+#     "!!2B": {
+#         'QR': '1b',
+#         'OPCODE': '4b',
+#         'AA': '1b',
+#         'TC': '1b',
+#         'RD': '1b',
+#         'RA': '1b',
+#         "Z": "3b",
+#         "RCODE": "4b",
+#     },
+#     "QDCOUNT": ("2B", "", "QUERIES"),
+#     "ANCOUNT": "2B",
+#     "NSCOUNT": "2B",
+#     "ARCOUNT": "2B",
+#     "QUERIES": {
+#         "QNAME": PREFIX_LEN_NULL_TERM,
+#         "QTYPE": "2B",
+#         "QCLASS": "2B"
+#     }
+# }
+
+# pck = Deserialize(b'\xccD\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x06google\x03com\x00\x00\x01\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x0c\x00\n\x00\x08\xd9\xd7\xa3\xbf\xe7\xb3\xae\xb9', dns_request)
+# print(pck.get_value('QUERIES')[0][0].value)
+# pck = Deserialize(b'\x10\xf0\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x011\x011\x0216\x03172\x07in-addr\x04arpa\x00\x00\x0c\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x0c\x00\n\x00\x08\xdc\x10\xd7\xca"\xf7\xc4\xb7', dns_request)
+# print(pck.get_value('QUERIES')[0][0].value)
