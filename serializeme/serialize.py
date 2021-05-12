@@ -6,6 +6,7 @@ Serialize object that can encode data into a byte array.
 # Licence: MIT License (c) 2021 Justin Roosenschoon
 
 import re
+from math import ceil
 from socket import inet_aton
 from serializeme.field import Field
 
@@ -16,7 +17,6 @@ PREFIX_LENGTH = "prefix_length"  # Length of data (in bytes) + Data
 PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
 IPv4 = "ipv4"
 VAR_PREFIXES = [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM]
-
 
 
 class Serialize:
@@ -52,14 +52,6 @@ class Serialize:
 
         self.__extract_fields()
 
-    def __bits_to_bytes(self, bit_str):
-        """
-        Helper function that will convert a string of bits into a byte array.
-        :param bit_str: The string of bits to convert.
-        :return: A byte array representing the specified bits.
-        """
-        bit_str = bit_str.replace(" ", "")
-        return int(bit_str, 2).to_bytes((len(bit_str) + 7) // 8, byteorder='big')
 
     def packetize(self):
         """
@@ -95,6 +87,7 @@ class Serialize:
         if len(bit_str) != 0:
             byte_str += self.encode_bit_str(bit_str)
             bit_str = ""
+
         return byte_str
 
     def encode_bit_str(self, input):
@@ -103,9 +96,8 @@ class Serialize:
         :param input: The bit string
         :return: The byte string equivalent.
         """
-        rounded_length = len(input) if (len(input) % 8 == 0) else (len(input) + 8 - (len(input) % 8))
-        input.zfill(rounded_length)
-        byte_ouput = int(input, 2).to_bytes(int(rounded_length / 8), "big")
+        byte_len = ceil(len(input) / 8)
+        byte_ouput = int(input, 2).to_bytes(byte_len, "big")
         return byte_ouput
 
     def encode_prefix_length_null_term(self, input):
