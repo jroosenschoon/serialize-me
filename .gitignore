@@ -5,3 +5,4 @@ __pycache__/
 serializeme.egg-info/
 .DS_Store
 serializeme/ex.py
+build/
