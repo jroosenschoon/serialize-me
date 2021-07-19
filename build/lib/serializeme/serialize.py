@@ -6,12 +6,15 @@ Serialize object that can encode data into a byte array.
 # Licence: MIT License (c) 2021 Justin Roosenschoon
 
 import re
+from math import ceil
+from socket import inet_aton
 from serializeme.field import Field
 
 # Constants representing various ways to handle variable-length data.
 NULL_TERMINATE = "null_terminate"  # Data + byte of zeros
 PREFIX_LENGTH = "prefix_length"  # Length of data (in bytes) + Data
-PREFIX_LEN_NULL_TERM = "prefix_len_null_term"  # Length of data (in bytes) + Data + bytes of zeros
+# Length of data (in bytes) + Data + bytes of zeros
+PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
 IPv4 = "ipv4"
 VAR_PREFIXES = [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM]
 
@@ -49,96 +52,91 @@ class Serialize:
 
         self.__extract_fields()
 
-    def __bits_to_bytes(self, bit_str):
-        """
-        Helper function that will convert a string of bits into a byte array.
-        :param bit_str: The string of bits to convert.
-        :return: A byte array representing the specified bits.
-        """
-        bit_str = bit_str.replace(" ", "")
-        return int(bit_str, 2).to_bytes((len(bit_str) + 7) // 8, byteorder='big')
 
     def packetize(self):
         """
         Generate a byte string from the list of fields in the object.
         :return: A byte string of the fields.
         """
-        # We shall generate a string of bits from the fields and then convert that bit string to a byte string.
+        byte_str = b''
+
+        # Bit string to accumulate bit values until we are ready to convert it into bytes
         bit_str = ""
+
         for field in self.fields:
-            if field.size == 1:  # One bit, just add it to our bit string.
-                bit_str += str(field.value)
+            #if the current field is a special type, the bit_str value to the byte string and clear the accumulated bit_str.
+            if not isinstance(field.size, int) and len(bit_str) != 0:
+                byte_str += self.encode_bit_str(bit_str)
+                bit_str = ""
+            if field.size == NULL_TERMINATE:
+                byte_str += self.encode_null_term(field.value)
+            elif field.size == PREFIX_LENGTH:
+                byte_str += self.encode_prefix_length(field.value)
+            elif field.size == PREFIX_LEN_NULL_TERM:
+                byte_str += self.encode_prefix_length_null_term(field.value)
+            elif field.size == IPv4:
+                byte_str += self.encode_ipv4(field.value)
+            elif field.size == 1:  # One bit, just add it to our bit string.
+                bit_str += "0" if field.value == 0 else "1"
             else:
-                if field.size not in [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM, IPv4]:
-                    # Fixed size. Generate number of zeros to make the specified size
-                    # and then the binary of the field's value.
-                    if isinstance(field.value, int):
+                if isinstance(field.value, int):
                         bit_str += "0" * (field.size - len(bin(field.value)[2:])) + bin(field.value)[2:]
-                    else:
-                        if isinstance(field.value, bytes):
-                            bit_str += field.value.decode('latin-1')
-                if field.size == IPv4:
-                    # IPv4 address.
-                    parts = field.value.split(".")
-                    for part in parts:
-                        bit_str += "0"*(8 - len(bin(int(part))[2:])) + bin(int(part))[2:]
+                elif isinstance(field.value, bytes):
+                        bit_str += field.value.decode('latin-1')
+        #clear the bit string one last time
+        if len(bit_str) != 0:
+            byte_str += self.encode_bit_str(bit_str)
+            bit_str = ""
 
-                if field.size == PREFIX_LENGTH or field.size == PREFIX_LEN_NULL_TERM:
-                    # Need to prefix the size of the value (in bytes) before adding the data.
-                    # User can enter a list of values to be handled, so loop through each one.
-                    if isinstance(field.value, str):
-                        # Add byte representing length.
-                        length_byte = "0" * (8 - len(bin(len(field.value))[2:])) + bin(len(field.value))[2:]
-                        bit_str += length_byte
-                        # Add data directly - no conversions
-                        bit_str += field.value
-                    else:
-                        for f in field.value:
-                            # Add byte representing length.
-                            length_byte = "0" * (8 - len(bin(len(f))[2:])) + bin(len(f))[2:]
-                            bit_str += length_byte
-                            # Add data directly - no conversions
-                            bit_str += f
-                elif field.size == NULL_TERMINATE:
-                    # Just need to add the data (without converting to binary) +  a byte of zeros.
-                    bit_str += field.value + "0" * 8
-                if field.size == PREFIX_LEN_NULL_TERM:
-                    # Added length prefixes above. Now need to add the binary version of our data a byte of zeros.
-                    bit_str += "0" * 8
+        return byte_str
 
-        # Convert bit string to byte array.
-        # Build the byte string byte-by-byte by collecting bits until we get 8 and then add the byte of this, and reset
-        # the temp_byte.
-        # Or if the character is an actual character (occurs when we use variable-length fields), start accumulating
-        # those until we hit a 1 or 0, then add the encoded word to the byte array and reset the temp_word.
-        b_array = b''
-        temp_byte = ""
-        temp_word = ""
-        for c in bit_str:
-            if len(temp_byte) == 8:
-                # Accumulated 8-bits. Add to byte array and reset temp_byte to begin accumulation again.
-                b_array += self.__bits_to_bytes(temp_byte)
-                temp_byte = ""
-            if c == "0" or c == "1":
-                # Encountered a 1 or 0. Add any letters we may have to the byte array as their corresponding byte (or
-                # nothing if we have not accumulated any letters), reset the temp_word,
-                # and accumulate the bit in temp_byte.
-                b_array += temp_word.encode()
-                temp_word = ""
-                temp_byte += c
-            else:
-                # We have non-bit. Accumulate in the temp_word.
-                # If there are any stray 0s or 1s, add the encoded version to our array.
-                if temp_byte:
-                    b_array += temp_byte.encode()
-                    temp_byte = ""
-                temp_word += c
-        # Add any leftovers to the byte array.
-        if temp_byte:
-            b_array += self.__bits_to_bytes(temp_byte)
-        if temp_word != "":
-            b_array += temp_word.encode()
-        return b_array
+    def encode_bit_str(self, input):
+        """
+        Helper function to turn a bit string to a byte string. If the bit string length is not divisible by 8, it is padded with zeroes before conversion.
+        :param input: The bit string
+        :return: The byte string equivalent.
+        """
+        byte_len = ceil(len(input) / 8)
+        byte_ouput = int(input, 2).to_bytes(byte_len, "big")
+        return byte_ouput
+
+    def encode_prefix_length_null_term(self, input):
+        """
+        Helper function to encode a string/list of string into a prefix length format with a null terminator
+        :param input: a string or a list of string
+        :return: The byte string equivalent.
+        """
+        return self.encode_prefix_length(input) + b'\x00'
+
+    def encode_null_term(self, input):
+        """
+        Helper function to encode a string with a null terminator added
+        :param input: a string
+        :return: The byte string equivalent, with a null character at the end.
+        """
+        return input.encode() + b'\x00'
+
+    def encode_prefix_length(self, input):
+        """
+        Helper function to encode a string/list of string into a prefix length format
+        :param input: a string or a list of string
+        :return: The byte string equivalent.
+        """
+        if isinstance(input, str):
+            return len(input).to_bytes(1, "big") + input.encode()
+        else :
+            byte_str = b''
+            for part in input:
+                byte_str += len(part).to_bytes(1, "big") + part.encode()
+            return byte_str
+
+    def encode_ipv4(self, input):
+        """
+        Helper function to encode an IPv4 string into a byte string
+        :param input: an IPv4 string
+        :return: The byte string equivalent.
+        """
+        return inet_aton(input)
 
     def get_field(self, field_name):
         """
@@ -224,6 +222,3 @@ class Serialize:
                 s += field.name + ": variable size: " + str(field.size) + ", with value " + str(field.value) + ".\n"
 
         return s
-
-
-
