@@ -86,3 +86,46 @@ class FieldNotFound(Exception):
     
     def __str__(self):
         return "{} -> {}".format(self.name, self.msg)
+
+class UninitializedField(Exception):
+    """
+    Exception raised when user tries to packetize fields before initializing
+    all the fields (eg, there is a field with a size of -1)
+    Attributes:
+        name: Name of field that was not initialized.
+        msg : Explanation of the error.
+    """
+    def __init__(self, name, msg="Field not initialized"):
+        self.name = name
+        self.msg = msg
+    
+    def __str__(self):
+        return "{} -> {}".format(self.name, self.msg)
+
+
+    """
+    Exception raised when user tries to packetize fields before initializing
+    all the fields (eg, there is a field with a size of -1)
+    Attributes:
+        name: Name of field that was not initialized.
+        msg : Explanation of the error.
+    """
+    def __init__(self, name, msg="Field not initialized"):
+        self.name = name
+        self.msg = msg
+    
+    def __str__(self):
+        return "{} -> {}".format(self.name, self.msg)
+
+class InvalidBitNumber(Exception):
+    """
+    Exception raised when user tries to packetize and a consecutive set of 
+    field objects storing bits do not add up to a byte.
+    Attributes:
+        msg : Explanation of the error.
+    """
+    def __init__(self, msg="Consecutive bit-fields do not form a byte (8-bits)"):
+        self.msg = msg
+    
+    def __str__(self):
+        return self.msg

@@ -9,17 +9,20 @@ import re
 from math import ceil
 from socket import inet_aton
 from serializeme.field import Field
+from serializeme.exceptions import *
+from collections import MutableMapping
 
 # Constants representing various ways to handle variable-length data.
 NULL_TERMINATE = "null_terminate"  # Data + byte of zeros
 PREFIX_LENGTH = "prefix_length"  # Length of data (in bytes) + Data
 # Length of data (in bytes) + Data + bytes of zeros
 PREFIX_LEN_NULL_TERM = "prefix_len_null_term"
-IPv4 = "ipv4"
-VAR_PREFIXES = [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM]
+IPV4 = "ipv4"
+HOST = "host"
+VAR_PREFIXES = [NULL_TERMINATE, PREFIX_LENGTH, PREFIX_LEN_NULL_TERM, IPV4, HOST]
 
 
-class Serialize:
+class Serialize(MutableMapping):
     """
     Serialize object that can encode data into a byte array. This allows users to enter values and the desired size (in
     bits or bytes), and the Serialize object will automatically handle the conversion of these values to a byte array.
@@ -46,97 +49,38 @@ class Serialize:
     """
 
     def __init__(self, data):
-        self.data = data
-
-        self.fields = []
-
-        self.__extract_fields()
-
+        self.fields = self.extract_fields_(data)
 
     def packetize(self):
         """
         Generate a byte string from the list of fields in the object.
         :return: A byte string of the fields.
         """
-        byte_str = b''
-
-        # Bit string to accumulate bit values until we are ready to convert it into bytes
-        bit_str = ""
-
+        t_byte = ''
+        b = b''
         for field in self.fields:
-            #if the current field is a special type, the bit_str value to the byte string and clear the accumulated bit_str.
-            if not isinstance(field.size, int) and len(bit_str) != 0:
-                byte_str += self.encode_bit_str(bit_str)
-                bit_str = ""
-            if field.size == NULL_TERMINATE:
-                byte_str += self.encode_null_term(field.value)
-            elif field.size == PREFIX_LENGTH:
-                byte_str += self.encode_prefix_length(field.value)
-            elif field.size == PREFIX_LEN_NULL_TERM:
-                byte_str += self.encode_prefix_length_null_term(field.value)
-            elif field.size == IPv4:
-                byte_str += self.encode_ipv4(field.value)
-            elif field.size == 1:  # One bit, just add it to our bit string.
-                bit_str += "0" if field.value == 0 else "1"
+            if field.size == -1:
+                raise UninitializedField(field.name)
             else:
-                if isinstance(field.value, int):
-                        bit_str += "0" * (field.size - len(bin(field.value)[2:])) + bin(field.value)[2:]
-                elif isinstance(field.value, bytes):
-                        bit_str += field.value.decode('latin-1')
-        #clear the bit string one last time
-        if len(bit_str) != 0:
-            byte_str += self.encode_bit_str(bit_str)
-            bit_str = ""
+                if field.special == "bits":
+                    if len(t_byte) + field.size == 8:
+                        b += self.bits_to_byte_(t_byte + bin(field.value)[2:])
+                        t_byte = ''
+                    elif len(t_byte) + field.size < 8:
+                        a = bin(field.value)[2:]
+                        t_byte += "0"*(field.size - len(a)) + a
+                    else:
+                        raise InvalidBitNumber()
+                else:
+                    if len(t_byte) == 0:
+                        b += field.value
+                    elif len(t_byte) == 8:
+                        b += t_byte + field.value
+                        t_byte = ''
+                    else:
+                        raise InvalidBitNumber()
 
-        return byte_str
-
-    def encode_bit_str(self, input):
-        """
-        Helper function to turn a bit string to a byte string. If the bit string length is not divisible by 8, it is padded with zeroes before conversion.
-        :param input: The bit string
-        :return: The byte string equivalent.
-        """
-        byte_len = ceil(len(input) / 8)
-        byte_ouput = int(input, 2).to_bytes(byte_len, "big")
-        return byte_ouput
-
-    def encode_prefix_length_null_term(self, input):
-        """
-        Helper function to encode a string/list of string into a prefix length format with a null terminator
-        :param input: a string or a list of string
-        :return: The byte string equivalent.
-        """
-        return self.encode_prefix_length(input) + b'\x00'
-
-    def encode_null_term(self, input):
-        """
-        Helper function to encode a string with a null terminator added
-        :param input: a string
-        :return: The byte string equivalent, with a null character at the end.
-        """
-        return input.encode() + b'\x00'
-
-    def encode_prefix_length(self, input):
-        """
-        Helper function to encode a string/list of string into a prefix length format
-        :param input: a string or a list of string
-        :return: The byte string equivalent.
-        """
-        if isinstance(input, str):
-            return len(input).to_bytes(1, "big") + input.encode()
-        else :
-            byte_str = b''
-            for part in input:
-                byte_str += len(part).to_bytes(1, "big") + part.encode()
-            return byte_str
-
-    def encode_ipv4(self, input):
-        """
-        Helper function to encode an IPv4 string into a byte string
-        :param input: an IPv4 string
-        :return: The byte string equivalent.
-        """
-        return inet_aton(input)
+        return b
 
     def get_field(self, field_name):
         """
@@ -144,81 +88,382 @@ class Serialize:
         :param field_name: The name of the desired field to find.
         :return: Field: Field object with the specified name.
         """
-        for f in self.fields:
-            if f.name.lower() == field_name.lower():
-                return f
-        return None
+        if self.field_exists(field_name):
+            self.__getitem__(field_name)
+            raise FieldNotFound(field_name)
 
-    # Helper
-    def __check_bit_size(self, value, num_bits):
-        """
-        Helper function to check if the specified value can fit in the specified number of bits.
-        :param value: The value trying to fit in num_bits
-        :param num_bits: The number of bits we want to see if value can fit in.
-        :return: True if value can fit in num_bits number of bits. False otherwise.
-        """
-        is_fit = False
-        if value <= 2 ** num_bits - 1:
-            is_fit = True
-        return is_fit
+    def set_field(self, name, value):
+        if self.field_exists(name):
+            self.__setitem__(name, value)
+        else:
+            raise FieldNotFound(name)
 
     # Helper
     def __extract_fields(self):
         """
         Helper function to parse the user-specified dictionary of fields upon creation of Serialize object.
         """
-        for name, stuff in self.data.items():
-            if stuff == ():  # Empty tuple == 1 bit, value of 0
-                self.fields.append(Field(name=name, value=0, size=1))
-            elif isinstance(stuff, int):  # int == specified value, value of 0
-                self.fields.append(Field(name=name, value=0, size=stuff))
-            elif isinstance(stuff, str):  # str == specified value, value of 0
-                pattern = re.compile("[0-9]+[bB]")
-                if pattern.match(stuff):
-                    if "b" in stuff: # bits specified
-                        size = int(stuff[:stuff.lower().index("b")])
-                        self.fields.append(Field(name=name, value=0, size=size))
-                    elif "B" in stuff: # Bytes specified
-                        size = int(stuff[:stuff.lower().index("b")]) * 8
-                        self.fields.append(Field(name=name, value=0, size=size))
-                else: # No other string option, so must have been one of the "vary" constants from above.
-                    self.fields.append(Field(name=name, value=stuff, size="vary"))
-            elif isinstance(stuff, tuple) or isinstance(stuff, list):  # specified value and size.
-                if isinstance(stuff[0], str):
-                    if "b" in stuff[0]: # Bits
-                        size = int(stuff[0][:stuff[0].lower().index("b")])
-                       # if not self.__check_bit_size(stuff[1], size):
-                        #    raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
-                        self.fields.append(Field(name=name, value=stuff[1], size=size))
-                    elif "B" in stuff[0]: # Bytes
-                        size = int(stuff[0][:stuff[0].lower().index("b")]) * 8
-                       # if not self.__check_bit_size(stuff[1], size):
-                         #   raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(size) + " bits.")
-                        self.fields.append(Field(name=name, value=stuff[1], size=size))
-                    elif stuff[0].lower() == NULL_TERMINATE:
-                        self.fields.append(Field(name=name, value=stuff[1], size=NULL_TERMINATE))
-                    elif stuff[0].lower() == PREFIX_LENGTH:
-                        self.fields.append(Field(name=name, value=stuff[1], size=PREFIX_LENGTH))
-                    elif stuff[0].lower() == PREFIX_LEN_NULL_TERM:
-                        self.fields.append(Field(name=name, value=stuff[1], size=PREFIX_LEN_NULL_TERM))
-                    elif stuff[0].lower() == IPv4:
-                        self.fields.append(Field(name=name, value=stuff[1], size=IPv4))
-                elif isinstance(stuff[0], int):
-                   # if not self.__check_bit_size(stuff[1], stuff[0]):
-                     #   raise Exception("error. " + str(stuff[1]) + " cannot be fit in " + str(stuff[0]) + " bits.")
-                    self.fields.append(Field(name=name, value=stuff[1], size=stuff[0]))
+        fields = []
+        for name, item in data.items():
+            if item == ():
+                # Field with value 0 and size 1 bit
+                fields.append(Field(name, 1, 0))
+            elif type(item) is int:
+                # Field with specified size of bits and value 0
+                fields.append(Field(name, item, 0))
+            elif type(item) is  str:
+                # One of three: bit, byte, or in CONSTANTS
+                if re.fullmatch(r"[1-9][0-9]*b", item):
+                    # Specifying number of bits with value 0
+                    fields.append(Field(name, int(item[:-1]), 0))
+                elif re.fullmatch(r"[1-9][0-9]*B", item):
+                    # Specifying number of bytes with value 0
+                    fields.append(Field(name, int(item[:-1])*8, 0))
+                elif item.lower() in CONSTANTS:
+                    # Field is a special type, but still has value 0
+                    fields.append(Field(name, item.lower(), 0))
+                else:
+                    # Unknown string type. Throw error.
+                    raise InvalidSize(item, msg="Invalid string for size")
+            elif type(item) is tuple:
+                # One of four: (num, val), (bit, val), (byte, val), (SPECIAL, val), 
+                # TODO Possibly add a fifth one to say number of these fields dependent on previous
+                # field value or just an integer??
+                if len(item) == 2:
+                    if type(item[0]) is int:
+                        if type(item[1]) is int or type(item[1]) is bytes:
+                            # Field with specified size of bits and value
+                            fields.append(Field(name, item[0], item[1]))
+                        else: 
+                            raise InvalidValue(type(item[1]))
+                    elif type(item[0]) is str:
+                        if item[0] in CONSTANTS:
+                            # Field is a special type, with a specified value.
+                            fields.append(Field(name, item[0].lower(), item[1]))
+                        elif type(item[1]) is int or type(item[1]) is bytes:
+                            if re.fullmatch(r"[1-9][0-9]*b", item[0]):
+                                # Specifying number of bits and value 
+                                fields.append(Field(name, int(item[0][:-1]), item[1]))
+                            elif re.fullmatch(r"[1-9][0-9]*B", item[0]):
+                                # Specifying number of bytes and value 
+                                fields.append(Field(name, int(item[0][:-1])*8, item[1])) 
+                            elif type(item[1]) is bytes and item[0].lower() == 'auto':
+                                fields.append(Field(name, len(item[1]), item[1]))
+                            else:
+                                # Unrecognized string for size. 
+                                raise InvalidSize(item[0], msg="Invalid string for size")
+                        else:
+                            # Unrecognized size or field.
+                            raise InvalidField(item) 
+                    else:
+                            # Invalid size type.
+                            raise InvalidSize(type(item[0]))
+                else: 
+                    # Too many values in tuple. #TODO Let user enter 3rd argument for variable number fields.
+                    raise InvalidField(item, msg="Invalid field. Tuples must have 2-elements, but recieved:")
+            elif type(item) is bytes:
+                fields.append(Field(name, len(item), item))
+            else:
+                # Unregonized field.                    
+                raise InvalidField(item)
+        return fields
 
-    def __str__(self):
+    def bits_to_byte_(self, bits):
+            return int(bits, 2).to_bytes((len(bits) + 7) // 8, byteorder='big')
+
+    def __delitem__(self, item):
+        if self.field_exists(item):
+            del self.fields[item]
+        else:
+            raise FieldNotFound(item)
+
+    def __getitem__(self, item):
+        if self.field_exists(item):
+            return self.fields[item]
+        raise FieldNotFound(item)
+
+    def __iter__(self):
+        yield from self.fields
+
+    def __len__(self):
+        return len(self.fields)
+
+    def __setitem__(self, item, value):
+        if self.field_exists(item):
+            for field in self.fields:
+                if field.name == item:
+                    if field.special == "bytes":
+                        if type(value) is int:
+                            if self.can_fit_(field.size*8, value):
+                                field.value = value
+                            else:
+                                raise ValueTooBig(field.size, value)
+                        elif type(value) is bytes:
+                            if field.size == len(value):
+                                field.value = value
+                            elif field.size > len(value):
+                                field.value = value + b'\x00' * (field.size-(len(value)))
+                            else:
+                                raise ValueTooBig(field.size, value, "bytes")
+                        else:
+                            raise InvalidValue(value)
+                    elif field.special == "bits":
+                        if type(value) is int:
+                            if value.bit_length() <= field.size:
+                                field.value = value
+                            else:
+                                raise ValueTooBig(field.size, value, "bits")
+                        elif type(value) is bytes:
+                            if field.size == len(value)*8:
+                                field.value = value
+                            elif field.size > len(value)*8:
+                                field.value = value + b'\x00' * (field.size-(len(value)*8))
+                            else:
+                                raise ValueTooBig(field.size, value, "bytes")
+                        else:
+                            raise InvalidValue(value)                    
+                    elif field.special == HOST:
+                        if type(field.size) is int and field.size == -1:
+                            if type(value) is bytes:
+                                field.size = len(value)
+                                field.value = value
+                            elif type(value) is str:
+                                field.size = len(value)
+                                field.value = value.encode()
+                            else:
+                                raise InvalidValue(value)      
+                        elif type(value) is bytes:
+                            if field.size >= len(value):
+                                field.value = value
+                            else:
+                                raise ValueTooBig(field.size, value, "bytes")
+                        elif type(value) is str:
+                            if field.size >= len(value):
+                                field.value = value.encode()
+                            else:
+                                raise ValueTooBig(field.size, value, "bytes")
+                        else:
+                            raise InvalidValue(value)                
+                    elif field.special == IPV4:
+                        if type(field.size) is int and field.size == -1:
+                            if type(value) is str:
+                                field.size = 32
+                                ip = self.valid_ip_(value)
+                                if ip:
+                                    field.value = ip
+                                else:
+                                    raise InvalidIPv4Address(value)
+                            elif type(value) is bytes:
+                                field.size = 32
+                                ip = self.valid_ip_(value)
+                                if ip:
+                                    field.value = ip
+                                else:
+                                    raise InvalidIPv4Address(value)                            
+                            elif type(value) is tuple:
+                                field.size = 32
+                                ip = self.valid_ip_(value)
+                                if ip:
+                                    field.value = ip
+                                else:
+                                    raise InvalidIPv4Address(value)     
+                            else:
+                                raise InvalidIPv4Address(value)
+                        if type(value) is bytes:
+                            if len(value) == 4:
+                                m = b''
+                                for a in value:
+                                    if int.from_bytes(a, "big") >= 0 and int.from_bytes(a, "big") <= 255:
+                                        m += a
+                                    else:
+                                        raise InvalidIPv4Address(value)
+                                field.value = m
+                            else:
+                                raise InvalidIPv4Address(value)
+                        elif type(value) is str:
+                            v = value.split(".")
+                            if len(v) == 4:
+                                m = b''
+                                for a in v:
+                                    if int(a) >= 0 and int(a) <= 255:
+                                        m += int(a).to_bytes(1, "big")
+                                    else:
+                                        raise InvalidIPv4Address(value)
+                                field.value = m
+                            else:
+                                raise InvalidIPv4Address(value)
+                        elif type(value) is tuple:
+                            if len(value) == 4:
+                                m = b''
+                                for a in value:
+                                    if int.from_bytes(a, "big") >= 0 and int.from_bytes(a, "big") <= 255:
+                                        m += a
+                                    else:
+                                        raise InvalidIPv4Address(value)
+                                field.value = m
+                            else:
+                                raise InvalidIPv4Address(value)
+                        else:
+                            raise InvalidIPv4Address(value)                
+                    elif field.special == PREFIX_LENGTH:
+                        if type(value) is bytes:
+                            if len(value) + 1 == field.size:
+                                field.value == len(value)  + value
+                            else:
+                                raise InvalidSize(field.size)
+                        elif type(value) is str:
+                            if len(value) + 1 == field.size:
+                                field.value == len(value).to_bytes(1, "big") + value.encode()
+                            else:
+                                raise InvalidSize(field.size)
+                        elif type(value) is tuple:
+                            if len("".join(value)) + len(value) == field.size:
+                                m = b''
+                                for a in value:
+                                    m += len(value).to_bytes(1, "big") + value.encode()
+                                field.value == m
+                            else:
+                                raise InvalidSize(field.size)
+                        else:
+                            raise InvalidValue(value)
+                    elif field.special == NULL_TERMINATE:
+                        if type(field.size) is int and field.size == -1:
+                            if type(value) is str:
+                                field.size = len(value.encode()) + 1
+                                field.value = value.encode() + b'\x00'
+                            elif type(value) is bytes:
+                                field.size = len(value) + 1
+                                field.value = value + b'\x00'
+                            else:
+                                raise InvalidValue(value)
+                        elif type(value) is bytes:
+                            if len(value) + 1 == field.size:
+                                field.value = value + b'\x00'
+                            else:
+                                raise InvalidSize(field.size)
+                        elif type(value) is str:
+                            if len(value) + 1 == field.size:
+                                field.value = value.encode() + b'\x00'
+                            else:
+                                raise InvalidSize(field.size)
+                        else:
+                            raise InvalidValue(value)
+                    elif field.special == PREFIX_LEN_NULL_TERM:
+                        if type(field.size) is int and field.size == -1:
+                            if type(value) is str:
+                                self.size = len(value.encode()) + 2
+                                self.value = len(value).to_bytes(1, "big") + value.encode() + b'\x00'
+                            elif type(value) is bytes:
+                                self.size = len(value) + 2
+                                self.value = len(value).to_bytes(1, "big") + value + b'\x00'
+                            elif type(value) is tuple:
+                                self.size = len("".join(value)) + len(value) + 1
+                                m = b''
+                                for a in value:
+                                    m += len(value).to_bytes(1, "big") + value.encode()
+                                field.value = m + b'\x00'
+                            else:
+                                raise InvalidValue(value)
+                        if type(value) is bytes:
+                            if len(value) + 2 == field.size:
+                                field.value = len(value).to_bytes(1, "big") + value + b'\x00'
+                            else:
+                                raise InvalidSize(field.size)
+                        elif type(value) is str:
+                            if len(value) + 2 == field.size:
+                                field.value = len(value).to_bytes(1, "big") + value.encode()+ b'\x00'
+                            else:
+                                raise InvalidSize(field.size)
+                        elif type(value) is tuple:
+                            if len("".join(value)) + len(value) + 1 == field.size:
+                                m = b''
+                                for a in value:
+                                    m += len(value).to_bytes(1, "big") + value.encode()
+                                field.value = m + b'\x00'
+                            else:
+                                raise InvalidSize(field.size)
+                        else:
+                            raise InvalidValue(value)
+                    break
+        else:
+            raise FieldNotFound(item)
+
+    def field_exists(self, name):
+        for f in self.fields:
+            if f.name == name:
+                return True
+        return False
+
+    def __repr__(self):
         """
         Generate a string representation of the Serialize object by listing out all of the fields, their value,
         and their sizes.
         :return: A string representation of the Serialize object.
         """
-        s = ""
+        msg = ""
+        # Start longest at the size of the headers eg "Size" has 4 characters, so bare minimum
+        # is 4 characters for this column.
+        longest_size = 4 
+        longest_name = 4
+        longest_value = 5
         for field in self.fields:
-            if field.size not in VAR_PREFIXES:
-                s += field.name + ": " + str(field.size) + " bits with value " + str(field.value) + ".\n"
-            else:
-                s += field.name + ": variable size: " + str(field.size) + ", with value " + str(field.value) + ".\n"
+            if len(field.name) > longest_name:
+                longest_name = len(field.name)
+            elif len(str(field.size)) + 6 > longest_size:
+                longest_size = len(str(field.size)) + 6 # (need to add 6 because of " bytes")
+            elif len(str(field.value)) > longest_value:
+                longest_value = len(str(field.value))
 
-        return s
+        msg += ("{n:^{width1}} | {s:^{width2}} | {v:^{width3}}\n".format(n="Name", width1=longest_name, s="Size", width2=longest_size, v="Value", width3=longest_value))
+        for field in self.fields:
+            msg += ("-"*(longest_name + longest_size + longest_value + 6)) + "\n"
+            if field.special in VAR_PREFIXES or field.special == "bytes":
+                if field.size == 1:
+                    msg += ("{n:^{width1}} | {s:^{width2}} | {v:^{width3}}\n".format(n=field.name, width1=longest_name, s=(str(field.size) +  " byte"), width2=longest_size, v=str(field.value), width3=longest_value))
+                elif field.size == -1:
+                    msg += ("{n:^{width1}} | {s:^{width2}} | {v:^{width3}}\n".format(n=field.name, width1=longest_name, s=str(field.size), width2=longest_size, v=str(field.value), width3=longest_value))
+                else:
+                    msg += ("{n:^{width1}} | {s:^{width2}} | {v:^{width3}}\n".format(n=field.name, width1=longest_name, s=(str(field.size) +  " bytes"), width2=longest_size, v=str(field.value), width3=longest_value))
+            else:
+                if field.size == 1:
+                    msg += ("{n:^{width1}} | {s:^{width2}} | {v:^{width3}}\n".format(n=field.name, width1=longest_name, s=(str(field.size) +  " bit"), width2=longest_size, v=str(field.value), width3=longest_value))
+                elif field.size == -1:
+                    msg += ("{n:^{width1}} | {s:^{width2}} | {v:^{width3}}\n".format(n=field.name, width1=longest_name, s=str(field.size), width2=longest_size, v=str(field.value), width3=longest_value))
+                else:
+                    msg += ("{n:^{width1}} | {s:^{width2}} | {v:^{width3}}\n".format(n=field.name, width1=longest_name, s=(str(field.size) +  " bits"), width2=longest_size, v=str(field.value), width3=longest_value))        
+        return msg
+
+    def can_fit_(self, size, value):
+        mask = size >> 31
+        return not (((~value & mask) + (value & ~mask))>> (size + ~0))
+
+    def valid_ip_(self, ip):
+        if type(ip) is str:
+            values = ip.split(".")
+            if len(values) != 4:
+                return False
+            a = b''
+            for value in values:
+                value = int(value)
+                if value < 0 or value > 255:
+                    return False
+                a += value.to_bytes(1, "big")
+            return a
+        elif type(ip) is tuple:
+            if len(ip) != 4:
+                return False
+            a = b''
+            for value in ip:
+                if value < 0 or value > 255:
+                    return False
+                a += value.to_bytes(1, "big")
+            return a
+        elif type(ip) is bytes:
+            if len(ip) != 4:
+                return False
+            for b in bytes:
+                b = int.from_bytes(b, "big")
+                if b < 0 or b > 255:
+                    return False
+            return ip
+        return False
