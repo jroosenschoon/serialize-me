@@ -120,6 +120,7 @@ Currently `serializme` supports five different special formats common in network
   - String: Length of the encoded string is added at the start, and a byte of zeros is added. For example, "google" becomes `0x06google0x00`.
   - Tuple: Length of each element in tuple is added before the element and at the end of all length/elements, a byte of zeros is added. For example, `("google", "com"))` creates `0x06google0x03com0x00`.
   - int: Must be -1. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
+ 
 For [deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/deserialize.py"), the following formats are currently supported:
 
 | Format                                           |                                                 Description                                                  |                                               Example                                                |
