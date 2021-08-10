@@ -104,22 +104,22 @@ For [serialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/seri
 Currently `serializme` supports five different special formats common in networking. To use them, enter `(SPECIAL_TYPE, VALUE)` where `SPECIAL_TYPE` is one of the following:
 - `serialize.HOST` : Create a field that is simply a string. The value must be:
   - String: Create a field that is just the encoded string.
-  - int: Must be 0. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
+  - int: Must be -1. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
 - `serialize.IPV4` : Create a field that represents an IPv4 address. The value can be:
   - String in form `A.B.C.D` where `A`-`D` are numbers between 0 and 255.
   - tuple of form `(A, B, C, D)` where `A`-`D` are numbers between 0 and 255.
-  - int: Must be 0. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
+  - int: Must be -1. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
 - `serialize.NULL_TERMINATE` : Create a field that will automatically add a byte of zeros at the end. The value must be:
   - String: Add a byte of zeros at the end of the string. For example, `google` becomes `google0x00`.
-  - int: Must be 0. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
+  - int: Must be -1. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
 - `serialize.PREFIX_LENGTH` : Create a field that will automatically append the length of each element, then the actual element. The value can be:
   - String: Length of the encoded string is added at the start. For example, "google" becomes `0x06google`.
   - Tuple: Length of each element in tuple is added before the element. For example, `("google", "com"))` creates `0x06google0x03com`.
-  - int: Must be 0. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
+  - int: Must be -1. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
 - `serialize.PREFIX_LEN_NULL_TERM` : Create a field that will automatically append the length of each element, then the actual element, and then after the at the end, a byte of zeros. The value can be:
   - String: Length of the encoded string is added at the start, and a byte of zeros is added. For example, "google" becomes `0x06google0x00`.
   - Tuple: Length of each element in tuple is added before the element and at the end of all length/elements, a byte of zeros is added. For example, `("google", "com"))` creates `0x06google0x03com0x00`.
-  - int: Must be 0. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
+  - int: Must be -1. It represents an undefined field that will be populated later. Before calling serialize's `packetize()`, it must be set by calling the `set_field()` function or by enter `serializeObject["field"] = "value"`.
 For [deserialize.py]("https://github.com/jroosenschoon/serialize-me/blob/main/serializeme/deserialize.py"), the following formats are currently supported:
 
 | Format                                           |                                                 Description                                                  |                                               Example                                                |
