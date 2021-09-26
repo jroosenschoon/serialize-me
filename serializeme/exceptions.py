@@ -8,28 +8,30 @@ class InvalidIPv4Address(Exception):
     def __init__(self, ipv4, msg="Invalid IPv4 Address"):
         self.ipv4 = ipv4
         self.msg = msg
-    
+
     def __str__(self):
         return "{}: {}".format(self.msg, self.ipv4)
 
+
 class ValueTooBig(Exception):
     """
-    Exception raised for trying to fit a value that cannot be fit in the specified
-      number of bytes or bits.
+    Exception raised for trying to fit a value that cannot be fit in the
+    specified number of bytes or bits.
     Attributes:
         size : Specified size user entered.
-        value: Value user tried to fit in that size, but was too big. 
+        value: Value user tried to fit in that size, but was too big.
         unit : bit or byte, depending on how size was specified.
         msg  : Explanation of the error.
     """
     def __init__(self, size, value, unit, msg="Cannot fit in"):
-        self.size  = size
+        self.size = size
         self.value = value
         self.unit = unit
         self.msg = msg
-    
+
     def __str__(self):
         return "{} {} {} {}".format(self.value, self.msg, self.size, self.unit)
+
 
 class InvalidValue(Exception):
     """
@@ -41,9 +43,10 @@ class InvalidValue(Exception):
     def __init__(self, value, msg="Invalid type for value. Expecting int or bytes. Received"):
         self.value = value
         self.msg = msg
-    
+
     def __str__(self):
         return "{}: {}".format(self.msg, self.value)
+
 
 class InvalidSize(Exception):
     """
@@ -55,9 +58,10 @@ class InvalidSize(Exception):
     def __init__(self, size, msg="Invalid type for size. Expecting str, int, or bytes. Received"):
         self.size = size
         self.msg = msg
-    
+
     def __str__(self):
         return "{}: {}".format(self.msg, self.size)
+
 
 class InvalidField(Exception):
     """
@@ -69,9 +73,10 @@ class InvalidField(Exception):
     def __init__(self, item, msg="Invalid Field. Recieved"):
         self.item = item
         self.msg = msg
-    
+
     def __str__(self):
         return "{}: {}".format(self.msg, self.item)
+
 
 class FieldNotFound(Exception):
     """
@@ -83,6 +88,36 @@ class FieldNotFound(Exception):
     def __init__(self, name, msg="Field not found."):
         self.name = name
         self.msg = msg
-    
+
     def __str__(self):
         return "{} -> {}".format(self.name, self.msg)
+
+
+class UninitializedField(Exception):
+    """
+    Exception raised when user tries to packetize fields before initializing
+    all the fields (eg, there is a field with a size of -1)
+    Attributes:
+        name: Name of field that was not initialized.
+        msg : Explanation of the error.
+    """
+    def __init__(self, name, msg="Field not initialized"):
+        self.name = name
+        self.msg = msg
+
+    def __str__(self):
+        return "{} -> {}".format(self.name, self.msg)
+
+
+class InvalidBitNumber(Exception):
+    """
+    Exception raised when user tries to packetize and a consecutive set of
+    field objects storing bits do not add up to a byte.
+    Attributes:
+        msg : Explanation of the error.
+    """
+    def __init__(self, msg="Consecutive bit-fields do not form a byte (8-bits)"):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg

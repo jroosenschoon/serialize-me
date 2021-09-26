@@ -1,5 +1,6 @@
 
 __pycache__/
+pyproject.toml
 .idea/
 /dist
 serializeme.egg-info/
